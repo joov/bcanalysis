@@ -1,0 +1,10 @@
+*.bak
+Thumbs.db
+*.class
+**/classes
+**/bin
+**/target
+**/build
+**/lib
+
+gitversion.properties
