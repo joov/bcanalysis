@@ -2,203 +2,98 @@ package basic;
 
 import java.io.*;
 import java.util.Map;
-import java.util.Objects;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Set;
-import java.util.SimpleTimeZone;
-import java.util.HashSet;
-import java.util.List;
 import java.nio.charset.Charset;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.net.URL;
 
 import org.bitcoinj.core.*;
-import org.bitcoinj.utils.*;
 import org.bitcoinj.params.MainNetParams;
 import org.json.*;
 
-public class ParseFromDatModel1UpToHour {	
-	private static HashSet<Address> addrSet = new HashSet<Address>();
-	private static final double satToBit = 0.00000001;
-	
-	static PrintWriter addresses ;
-	static StringBuilder addStr = new StringBuilder();
-	static PrintWriter transactions ;
-	static StringBuilder traStr = new StringBuilder();
-	static PrintWriter inputs ;
-	static StringBuilder inputStr = new StringBuilder();
-	static PrintWriter outputs ;
-	static StringBuilder outputStr = new StringBuilder();
+/**
+ * This class will extract data regarding bitcoin transaction
+ * from blocktrail api and blockchain api
+ * The exchange rate between bitcoin is obtained from a
+ * website which only has daily exchange rate available
+ * @author yshi
+ *
+ */
+public class ParserToCSVDateModel1 extends ToCSVParser implements BitCoinExRateGetterDay{	
+	private PrintWriter addresses ;
+	private StringBuilder addStr = new StringBuilder();
+	private PrintWriter transactions ;
+	private StringBuilder traStr = new StringBuilder();
+	private PrintWriter inputs ;
+	private StringBuilder inputStr = new StringBuilder();
+	private PrintWriter outputs ;
+	private StringBuilder outputStr = new StringBuilder();
 
-	static PrintWriter inTran ;
-	static StringBuilder inStr = new StringBuilder();
-	static PrintWriter outTran ;
-	static StringBuilder outStr = new StringBuilder();
+	private PrintWriter inTran ;
+	private StringBuilder inStr = new StringBuilder();
+	private PrintWriter outTran ;
+	private StringBuilder outStr = new StringBuilder();
 	
-	// time is always in the format of "2014-03-11T08:27:57+0000"
-	private static double getDollarVal(String time, String value) throws IOException, JSONException{
-		double val = Long.parseLong(value);
-		String target = time.split("\\+")[0];
-	    DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-	    df.setTimeZone(new SimpleTimeZone(SimpleTimeZone.UTC_TIME, "UTC"));
-	    long timePara = 0;
-	    try {
-			Date result =  df.parse(target);
-			timePara = result.getTime()/1000;	
-		} catch (ParseException e) {
-			e.printStackTrace();
-		} 
-	    JSONObject rateJson = readJsonFromUrl("https://winkdex.com/api/v0/price?time=" + timePara);
-	    if(rateJson == null){
-	    	return 0.0;
-	    }
-		double penny = rateJson.getInt("price");	
-		return val*satToBit*penny/100.0;
-	}
-	
-	
-	private static String readAll(Reader rd) throws IOException {
-		StringBuilder sb = new StringBuilder();
-		int cp;
-		while ((cp = rd.read()) != -1) {
-			sb.append((char) cp);
-		}
-		return sb.toString();
-	}
-
-	public static JSONObject readJsonFromUrl(String url) throws IOException, JSONException {
-		System.setProperty("http.agent", "Chrome");
-		InputStream is = null;
-		try{
-			is = new URL(url).openStream();			
-		}catch(java.net.ConnectException e){
-			transactions.write(traStr.toString());
-			transactions.close();
-			inputs.write(inputStr.toString());
-			inputs.close();
-			outputs.write(outputStr.toString());
-			outputs.close();
-			inTran.write(inStr.toString());
-			inTran.close();
-			outTran.write(outStr.toString());
-			outTran.close();
-			
-			for(Address ad : addrSet){
-				addStr.append(ad);
-				addStr.append("\n");					
-			}				
-			addresses.write(addStr.toString());
-			addresses.close();
-			System.out.println("finish exception (some transaction not fully parsed)!");
-			return null;
-		}
-		try {
-			BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
-			String jsonText = readAll(rd);
-			JSONObject json = new JSONObject(jsonText);
-			return json;
-		} finally {
-			is.close();
-		}
-	}
-
-	private static void getAddTagL(JSONArray xputs, String address, boolean isInput) throws JSONException{
-		JSONObject item = null;
-		if(isInput){
-			for(int i = 0; i < xputs.length(); i ++){
-				JSONObject input = xputs.getJSONObject(i);
-				if(input.has("prev_out")){
-					item = input.getJSONObject("prev_out");
-					if(item.has("addr") && item.get("addr").toString().equals(address)){
-						break;
-					}else{
-						continue;
-					}
-				}
-			}			
-		}else{
-			for(int i = 0; i < xputs.length(); i ++){
-				item = xputs.getJSONObject(i);
-				if(item.has("addr") && item.get("addr").toString().equals(address)){
-					break;
-				}else{
-					continue;
-				}
-			}		
-		}
-		
-		ParseFromDatModel1UpToHour.addrSet.remove(new Address(address, null, null));
-		
-		// no addr entry or no correct addr entry
-		if(!(item.has("addr") && item.get("addr").toString().equals(address))){
-			ParseFromDatModel1UpToHour.addrSet.add(new Address(address, null, null));
-			return;
-		}
-		if (item.has("addr_tag_link") || item.has("addr_tag")) {
-			if (item.has("addr_tag_link") && item.has("addr_tag")) {
-				System.out.println(address);
-				ParseFromDatModel1UpToHour.addrSet.remove(new Address(address, item.get("addr_tag_link").toString(), null));
-				ParseFromDatModel1UpToHour.addrSet.remove(new Address(address, null, item.get("addr_tag").toString()));
-				ParseFromDatModel1UpToHour.addrSet.add(new Address(address, item.get("addr_tag_link").toString(), item.get("addr_tag").toString()));
-			} else if (item.has("addr_tag_link")) {
-				System.out.println(address);
-				ParseFromDatModel1UpToHour.addrSet.add(new Address(address, item.get("addr_tag_link").toString(), null));
-			} else {
-				System.out.println(address);
-				ParseFromDatModel1UpToHour.addrSet.add(new Address(address, null, item.get("addr_tag").toString()));
-			}
-		}else{
-			ParseFromDatModel1UpToHour.addrSet.add(new Address(address, null, null));						
-		}
-	}
-	
-	public static void main(String[] args) throws IOException, JSONException {
-		Context.getOrCreate(MainNetParams.get());
-
-		// Arm the blockchain file loader.
-		NetworkParameters np = new MainNetParams();
-		List<File> blockChainFiles = new ArrayList<File>();
-		blockChainFiles.add(new File("C:\\Users\\tsutomu\\AppData\\Roaming\\Bitcoin\\blocks\\blk00514.dat"));
-		BlockFileLoader bfl = new BlockFileLoader(np, blockChainFiles);
-
+	public ParserToCSVDateModel1(ArrayList<String> datFileNames) throws FileNotFoundException {
+		super(datFileNames);
 		// define files to be written into
-		addresses = new PrintWriter(new File("./csvs/addresses.csv"));
-		addStr = new StringBuilder();
-		addStr.append("address:ID(Addr),addr_tag_link,addr_tag\n");
-		transactions = new PrintWriter(new File("./csvs/transactions.csv"));
-		traStr = new StringBuilder();
-		traStr.append("tranHashString:ID(Trans),time\n");
-		inputs = new PrintWriter(new File("./csvs/inputs.csv"));
-		inputStr = new StringBuilder();
-		inputStr.append("addr:ID(SendAdd),tranHashString,value_bitcoin,value_dollar,type\n");
-		outputs = new PrintWriter(new File("./csvs/outputs.csv"));
-		outputStr = new StringBuilder();
-		outputStr.append("addr:ID(ReceAdd),tranHashString,value_bitcoin,value_dollar,type\n");
+		this.addresses = new PrintWriter(new File("./csvs/addresses.csv"));
+		this.addStr = new StringBuilder();
+		this.addStr.append("address:ID(Addr),addr_tag_link,addr_tag\n");
+		this.transactions = new PrintWriter(new File("./csvs/transactions.csv"));
+		this.traStr = new StringBuilder();
+		this.traStr.append("tranHashString:ID(Trans),time\n");
+		this.inputs = new PrintWriter(new File("./csvs/inputs.csv"));
+		this.inputStr = new StringBuilder();
+		this.inputStr.append("addr:ID(SendAdd),tranHashString,value_bitcoin,value_dollar,type\n");
+		this.outputs = new PrintWriter(new File("./csvs/outputs.csv"));
+		this.outputStr = new StringBuilder();
+		this.outputStr.append("addr:ID(ReceAdd),tranHashString,value_bitcoin,value_dollar,type\n");
 
 		inTran = new PrintWriter(new File("./csvs/intran.csv"));
 		inStr = new StringBuilder();
 		inStr.append(":START_ID(SendAdd),:END_ID(Trans)\n");
 		outTran = new PrintWriter(new File("./csvs/outtran.csv"));
 		outStr = new StringBuilder();
-		outStr.append(":START_ID(Trans),:END_ID(ReceAdd)\n");		
-		
+		outStr.append(":START_ID(Trans),:END_ID(ReceAdd)\n");
+	}	
+
+	
+	/* (non-Javadoc)
+	 * @see basic.BitCoinExRateGetterDay#getDollarValDay(java.lang.String, java.lang.String)
+	 */
+	 // time is always in the format of "2014-03-11T08:27:57+0000"
+	public double getDollarValDay(String time, String value) throws IOException, JSONException{
+		double val = Long.parseLong(value);
+		String target = time.split("\\+")[0];
+		String date = target.split("T")[0];
+	    JSONObject rateJson = readJsonFromUrl("https://api.coindesk.com/v1/bpi/historical/close.json?start=" 
+	    + date + "&end=" + date);
+	    JSONObject bpi = rateJson.getJSONObject("bpi");
+	    double dollar = bpi.getDouble(date);
+		System.out.println("time");
+		System.out.println(time);
+		System.out.println(rateJson.get("timestamp"));		
+		return val*BitCoinExRateGetterDay.satToBit*dollar;
+	}
+	
+	
+	/* (non-Javadoc)
+	 * @see basic.ToCSVParser#parse()
+	 */
+	public void parse() throws JSONException, IOException{
 		// Iterate over the blocks in the dataset.
-		//int counter = 0;
 		long time = System.currentTimeMillis();
 		boolean readBl = false;
 		for (Block block : bfl) {
 			//comment out if not needed (i.e. when starting from the first block of a file)
 			// fill in the last second blockhash printed
-			if(block.getHashAsString().equals("000000000000000001e670739ad29297b593aa960c141d594fd2756788c46c93")){
-				readBl = true;
-				continue;
-			}else if(!readBl){
-				continue;
-			}
+//			if(block.getHashAsString().equals("0000000000000000026806253ad80b75a43ba9937984b5fb6e6826b2297744f2")){
+//				readBl = true;
+//				continue;
+//			}else if(!readBl){
+//				continue;
+//			}
 			System.out.println(block.getHashAsString());
 			System.out.println(System.currentTimeMillis() - time);
 			time = System.currentTimeMillis();
@@ -266,10 +161,7 @@ public class ParseFromDatModel1UpToHour {
 								inputStr.append(',');
 								inputStr.append(inp.get("value"));
 								inputStr.append(',');
-								double temp = ParseFromDatModel1UpToHour.getDollarVal(ta.get("time").toString(), inp.get("value").toString());
-								if (temp == 0.0){
-									return;
-								}
+								double temp = this.getDollarValDay(ta.get("time").toString(), inp.get("value").toString());
 								inputStr.append(temp);								
 								inputStr.append(',');
 								inputStr.append(inp.get("type"));		
@@ -287,10 +179,7 @@ public class ParseFromDatModel1UpToHour {
 								inputStr.append(',');
 								inputStr.append(inp.get("value"));
 								inputStr.append(',');
-								double temp = ParseFromDatModel1UpToHour.getDollarVal(ta.get("time").toString(), inp.get("value").toString());
-								if(temp == 0.0){
-									return;
-								}
+								double temp = this.getDollarValDay(ta.get("time").toString(), inp.get("value").toString());
 								inputStr.append(temp);								
 								inputStr.append(',');
 								inputStr.append(inp.get("type"));
@@ -298,7 +187,7 @@ public class ParseFromDatModel1UpToHour {
 								
 								// for address, addr_tag_link,addr_tag
 								JSONArray inputsArr = tranFromBC.get(taHash).getJSONArray("inputs");	 
-								ParseFromDatModel1UpToHour.getAddTagL(inputsArr, inp.get("address").toString(), true);
+								this.getAddTagL(inputsArr, inp.get("address").toString(), true);
 								
 								//inStr :START_ID(SendAdd),:END_ID(Trans)
 								inStr.append(inp.get("address"));
@@ -328,10 +217,7 @@ public class ParseFromDatModel1UpToHour {
 								outputStr.append(',');
 								outputStr.append(outp.get("value"));
 								outputStr.append(',');
-								double temp = ParseFromDatModel1UpToHour.getDollarVal(ta.get("time").toString(), outp.get("value").toString());
-								if(temp == 0.0){
-									return;
-								}
+								double temp = this.getDollarValDay(ta.get("time").toString(), outp.get("value").toString());
 								outputStr.append(temp);								
 								outputStr.append(',');
 								outputStr.append(outp.get("type"));	
@@ -349,10 +235,7 @@ public class ParseFromDatModel1UpToHour {
 								outputStr.append(',');
 								outputStr.append(outp.get("value"));
 								outputStr.append(',');
-								double temp = ParseFromDatModel1UpToHour.getDollarVal(ta.get("time").toString(), outp.get("value").toString());
-								if (temp == 0.0){
-									return;
-								}
+								double temp = this.getDollarValDay(ta.get("time").toString(), outp.get("value").toString());
 								outputStr.append(temp);								
 								outputStr.append(',');
 								outputStr.append(outp.get("type"));
@@ -360,7 +243,7 @@ public class ParseFromDatModel1UpToHour {
 								
 								// for addr_tag_link,addr_tag
 								JSONArray outs = tranFromBC.get(taHash).getJSONArray("out");
-								ParseFromDatModel1UpToHour.getAddTagL(outs, outp.get("address").toString(), false);
+								super.getAddTagL(outs, outp.get("address").toString(), false);
 								
 								//outStr :START_ID(Trans),:END_ID(ReceAdd)
 								outStr.append(taHash);
@@ -397,7 +280,44 @@ public class ParseFromDatModel1UpToHour {
 		addresses.write(addStr.toString());
 		addresses.close();
 		System.out.println("finish!");
-
 	}
+	
 
+
+	public JSONObject readJsonFromUrl(String url) throws IOException, JSONException {
+		System.setProperty("http.agent", "Chrome");
+		InputStream is = null;
+		try{
+			is = new URL(url).openStream();			
+		}catch(Exception e){
+			transactions.write(traStr.toString());
+			transactions.close();
+			inputs.write(inputStr.toString());
+			inputs.close();
+			outputs.write(outputStr.toString());
+			outputs.close();
+			inTran.write(inStr.toString());
+			inTran.close();
+			outTran.write(outStr.toString());
+			outTran.close();
+			
+			for(Address ad : this.addrSet){
+				addStr.append(ad);
+				addStr.append("\n");					
+			}				
+			addresses.write(addStr.toString());
+			addresses.close();
+			System.out.println("finish exception (some transaction not fully parsed)!");
+			e.printStackTrace();
+			System.exit(1);	
+		}
+		try {
+			BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
+			String jsonText = ToCSVParser.readAll(rd);
+			JSONObject json = new JSONObject(jsonText);
+			return json;
+		} finally {
+			is.close();
+		}
+	}
 }
