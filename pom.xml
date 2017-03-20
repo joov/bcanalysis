@@ -1,20 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>UniMannheim</groupId>
+  <groupId>de.uni-mannheim.bitcoinAna</groupId>
   <artifactId>Bachelor</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>Thesis</name>
-	<repositories>
-	<!-- declare BitCoinJ repository name and location -->
-		<repository>
-			<id>api-v1-client-java-mvn-repo</id>
-			<url>https://raw.githubusercontent.com/blockchain/api-v1-client-java/mvn-repo/</url>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>always</updatePolicy>
-			</snapshots>
-		</repository>
-	</repositories>
   
 	<dependencies>
 	  
@@ -54,7 +42,41 @@
 			<version>20160810</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.neo4j/neo4j-cypher -->
+		<dependency>
+			<groupId>org.neo4j</groupId>
+			<artifactId>neo4j-cypher</artifactId>
+			<version>3.1.2</version>
+		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.neo4j.app/neo4j-server -->
+		<dependency>
+			<groupId>org.neo4j.app</groupId>
+			<artifactId>neo4j-server</artifactId>
+			<version>3.1.2</version>
+		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/org.neo4j/neo4j-io -->
+		<dependency>
+			<groupId>org.neo4j</groupId>
+			<artifactId>neo4j-io</artifactId>
+			<version>3.1.2</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.neo4j/neo4j-kernel -->
+		<dependency>
+			<groupId>org.neo4j</groupId>
+			<artifactId>neo4j-kernel</artifactId>
+			<version>3.1.2</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.neo4j/neo4j -->
+		<dependency>
+			<groupId>org.neo4j</groupId>
+			<artifactId>neo4j</artifactId>
+			<version>3.1.2</version>
+		</dependency>
 
 	</dependencies>
+	<name>BitcoinTransactionAnalysis</name>
 </project>
