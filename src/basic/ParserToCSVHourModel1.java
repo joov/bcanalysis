@@ -2,12 +2,19 @@ package basic;
 
 import java.io.*;
 import java.util.Map;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.SimpleTimeZone;
 import java.nio.charset.Charset;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.net.URL;
 
 import org.bitcoinj.core.*;
 import org.json.*;
+
+import basic.Address;
 
 /**
  * This class will extract data regarding bitcoin transaction
@@ -17,7 +24,7 @@ import org.json.*;
  * @author yshi
  *
  */
-public class ParserToCSVDateModel1 extends ToCSVParser implements BitCoinExRateGetterDay{	
+public class ParserToCSVHourModel1 extends ToCSVParser implements BitCoinExRateGetterHour{	
 	private PrintWriter addresses ;
 	private StringBuilder addStr = new StringBuilder();
 	private PrintWriter transactions ;
@@ -32,7 +39,7 @@ public class ParserToCSVDateModel1 extends ToCSVParser implements BitCoinExRateG
 	private PrintWriter outTran ;
 	private StringBuilder outStr = new StringBuilder();
 	
-	public ParserToCSVDateModel1(String[] datFileNames) throws FileNotFoundException {
+	public ParserToCSVHourModel1(String[] datFileNames) throws FileNotFoundException {
 		super(datFileNames);
 		// define files to be written into
 		this.addresses = new PrintWriter(new File("./csvs/addresses.csv"));
@@ -61,18 +68,21 @@ public class ParserToCSVDateModel1 extends ToCSVParser implements BitCoinExRateG
 	 * @see basic.BitCoinExRateGetterDay#getDollarValDay(java.lang.String, java.lang.String)
 	 */
 	 // time is always in the format of "2014-03-11T08:27:57+0000"
-	public double getDollarValDay(String time, String value) throws IOException, JSONException{
+	public double getDollarValHour(String time, String value) throws IOException, JSONException{
 		double val = Long.parseLong(value);
 		String target = time.split("\\+")[0];
-		String date = target.split("T")[0];
-	    JSONObject rateJson = readJsonFromUrl("https://api.coindesk.com/v1/bpi/historical/close.json?start=" 
-	    + date + "&end=" + date);
-	    JSONObject bpi = rateJson.getJSONObject("bpi");
-	    double dollar = bpi.getDouble(date);
-		System.out.println("time");
-		System.out.println(time);
-		System.out.println(rateJson.get("timestamp"));		
-		return val*BitCoinExRateGetterDay.satToBit*dollar;
+	    DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+	    df.setTimeZone(new SimpleTimeZone(SimpleTimeZone.UTC_TIME, "UTC"));
+	    long timePara = 0;
+	    try {
+			Date result =  df.parse(target);
+			timePara = result.getTime()/1000;	
+		} catch (ParseException e) {
+			e.printStackTrace();
+		} 
+	    JSONObject rateJson = readJsonFromUrl("https://winkdex.com/api/v0/price?time=" + timePara);
+		double penny = rateJson.getInt("price");	
+		return val*BitCoinExRateGetterHour.satToBit*penny/100.0;
 	}
 	
 	
@@ -86,12 +96,12 @@ public class ParserToCSVDateModel1 extends ToCSVParser implements BitCoinExRateG
 		for (Block block : bfl) {
 			//comment out if not needed (i.e. when starting from the first block of a file)
 			// fill in the last second blockhash printed
-//			if(block.getHashAsString().equals("0000000000000000026806253ad80b75a43ba9937984b5fb6e6826b2297744f2")){
-//				readBl = true;
-//				continue;
-//			}else if(!readBl){
-//				continue;
-//			}
+			if(block.getHashAsString().equals("0000000000000000026806253ad80b75a43ba9937984b5fb6e6826b2297744f2")){
+				readBl = true;
+				continue;
+			}else if(!readBl){
+				continue;
+			}
 			System.out.println(block.getHashAsString());
 			System.out.println(System.currentTimeMillis() - time);
 			time = System.currentTimeMillis();
@@ -111,7 +121,7 @@ public class ParserToCSVDateModel1 extends ToCSVParser implements BitCoinExRateG
 			}catch(java.net.SocketException se){
 				this.end();
 				System.out.println("finish exception!");
-				System.exit(1);;
+				System.exit(1);
 			}
 			//System.out.println(blockJson);
 			JSONArray tas = blockJson.getJSONArray("data");
@@ -143,7 +153,7 @@ public class ParserToCSVDateModel1 extends ToCSVParser implements BitCoinExRateG
 								inputStr.append(',');
 								inputStr.append(inp.get("value"));
 								inputStr.append(',');
-								double temp = this.getDollarValDay(ta.get("time").toString(), inp.get("value").toString());
+								double temp = this.getDollarValHour(ta.get("time").toString(), inp.get("value").toString());
 								inputStr.append(temp);								
 								inputStr.append(',');
 								inputStr.append(inp.get("type"));		
@@ -161,7 +171,7 @@ public class ParserToCSVDateModel1 extends ToCSVParser implements BitCoinExRateG
 								inputStr.append(',');
 								inputStr.append(inp.get("value"));
 								inputStr.append(',');
-								double temp = this.getDollarValDay(ta.get("time").toString(), inp.get("value").toString());
+								double temp = this.getDollarValHour(ta.get("time").toString(), inp.get("value").toString());
 								inputStr.append(temp);								
 								inputStr.append(',');
 								inputStr.append(inp.get("type"));
@@ -199,7 +209,7 @@ public class ParserToCSVDateModel1 extends ToCSVParser implements BitCoinExRateG
 								outputStr.append(',');
 								outputStr.append(outp.get("value"));
 								outputStr.append(',');
-								double temp = this.getDollarValDay(ta.get("time").toString(), outp.get("value").toString());
+								double temp = this.getDollarValHour(ta.get("time").toString(), outp.get("value").toString());
 								outputStr.append(temp);								
 								outputStr.append(',');
 								outputStr.append(outp.get("type"));	
@@ -217,7 +227,7 @@ public class ParserToCSVDateModel1 extends ToCSVParser implements BitCoinExRateG
 								outputStr.append(',');
 								outputStr.append(outp.get("value"));
 								outputStr.append(',');
-								double temp = this.getDollarValDay(ta.get("time").toString(), outp.get("value").toString());
+								double temp = this.getDollarValHour(ta.get("time").toString(), outp.get("value").toString());
 								outputStr.append(temp);								
 								outputStr.append(',');
 								outputStr.append(outp.get("type"));

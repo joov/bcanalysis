@@ -1,0 +1,16 @@
+package basic;
+
+import java.io.IOException;
+
+import org.bitcoinj.core.Context;
+import org.bitcoinj.params.MainNetParams;
+import org.json.JSONException;
+
+public class Main {
+	public static void main(String[] args) throws JSONException, IOException{
+		Context.getOrCreate(MainNetParams.get());
+		String[] strList = {"blk00514.dat"};
+		ParserToCSVHourModel1 p1 = new ParserToCSVHourModel1(strList);
+		p1.parse();
+	}
+}

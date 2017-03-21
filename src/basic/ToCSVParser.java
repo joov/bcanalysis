@@ -23,7 +23,7 @@ public abstract class ToCSVParser {
 	 * Constructor
 	 * @param datFileNames the array of dat file name in form of .dat
 	 */
-	public ToCSVParser(ArrayList<String> datFileNames){
+	public ToCSVParser(String[] datFileNames){
 		// Arm the blockchain file loader.
 		NetworkParameters np = new MainNetParams();
 		List<File> blockChainFiles = new ArrayList<File>();
@@ -40,7 +40,7 @@ public abstract class ToCSVParser {
 	 * @return
 	 * @throws IOException
 	 */
-	public static String readAll(Reader rd) throws IOException {
+	protected static String readAll(Reader rd) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		int cp;
 		while ((cp = rd.read()) != -1) {
@@ -66,6 +66,14 @@ public abstract class ToCSVParser {
 	 */
 	abstract void parse() throws JSONException, IOException;
 	
+	
+	/**
+	 * add the data recorded so far into
+	 * csv files
+	 * 
+	 */
+	abstract void end();
+	
 	/**
 	 * If applicable, record the addr_tag_link and addr_tag
 	 * of an address
@@ -75,7 +83,7 @@ public abstract class ToCSVParser {
 	 * @param isInput
 	 * @throws JSONException
 	 */
-	void getAddTagL(JSONArray xputs, String address, boolean isInput) throws JSONException{
+	protected void getAddTagL(JSONArray xputs, String address, boolean isInput) throws JSONException{
 		JSONObject item = null;
 		if(isInput){
 			for(int i = 0; i < xputs.length(); i ++){
