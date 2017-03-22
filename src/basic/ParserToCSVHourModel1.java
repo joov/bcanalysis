@@ -20,7 +20,7 @@ import basic.Address;
  * This class will extract data regarding bitcoin transaction
  * from blocktrail api and blockchain api
  * The exchange rate between bitcoin is obtained from a
- * website which only has daily exchange rate available
+ * website which has hourly exchange rate available
  * @author yshi
  *
  */

@@ -4,7 +4,7 @@ import java.util.Objects;
 
 
 /**
- * a class for bitcoin address possibly including the  
+ * a class for bitcoin address, possibly including the  
  * values of addr_tag_link and addr_tag found on blockchain.info
  * @author yshi
  *

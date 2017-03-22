@@ -14,6 +14,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * abstract class for all parser classes
+ * @author yshi
+ *
+ */
 public abstract class ToCSVParser {
 	BlockFileLoader bfl;
 	HashSet<Address> addrSet = new HashSet<Address>();
