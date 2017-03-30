@@ -1,4 +1,4 @@
-package basic;
+package basic1;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -19,6 +19,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+
+import basic.AddressOT;
+import basic.Address;
+import basic.Util;
+
 /**
  * abstract class for all parser classes
  * @author yshi
@@ -26,7 +31,7 @@ import org.json.JSONObject;
  */
 public abstract class ToCSVParser {
 	BlockFileLoader bfl;
-	protected HashSet<AddressOT> addrSet = new HashSet<AddressOT>();
+	HashSet<AddressOT> addrSet = new HashSet<AddressOT>();
 
 	
 	/**
@@ -86,6 +91,14 @@ public abstract class ToCSVParser {
 			is.close();
 		}
 	}
+
+	
+	/**
+	 * Where the main parsing take place
+	 * @throws JSONException
+	 * @throws IOException
+	 */
+	abstract void parse() throws JSONException, IOException;
 	
 	/**
 	 * To be overwritten in the subclasses, obtain the dollar value of 
@@ -98,15 +111,6 @@ public abstract class ToCSVParser {
 	 * @throws IOException
 	 */
 	abstract double getDollarValDayorHour(String time, String value) throws JSONException, IOException;
-
-	
-	/**
-	 * Where the main parsing take place
-	 * @throws JSONException
-	 * @throws IOException
-	 */
-	abstract void parse() throws JSONException, IOException;
-	
 	
 	/**
 	 * add the data recorded so far into
@@ -183,4 +187,7 @@ public abstract class ToCSVParser {
 			this.addrSet.add(new AddressOT(address, null, null, time));						
 		}
 	}
+	
+
+
 }

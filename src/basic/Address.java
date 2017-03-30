@@ -53,8 +53,10 @@ public class Address{
 	
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
+	 * 
+	 * addrID,addr_tag_link,addr_tag
 	 */
 	public String toString(){
-		return this.address +  "," + this.addrTagLink + ","+ this.addrTag;
+		return this.address +  ',' + this.addrTagLink + ',' + this.addrTag;
 	}
 }

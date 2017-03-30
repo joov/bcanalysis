@@ -1,30 +1,25 @@
-package basic;
+package basic1;
 
 import java.io.*;
 import java.util.Map;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.SimpleTimeZone;
-import java.nio.charset.Charset;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.net.URL;
 
 import org.bitcoinj.core.*;
 import org.json.*;
 
-import basic.Address;
+import basic.Util;
+import basic.AddressOT;
+
 
 /**
- * This class will extract data regarding bitcoin transaction
- * from blocktrail api and blockchain api
- * The exchange rate between bitcoin is obtained from a
- * website which has hourly exchange rate available
+ * This class will is a super class for the classes which extract 
+ * data of bitcoin transaction from blocktrail api and blockchain api
+ * according to Model 1.
  * @author yshi
  *
  */
-public class ParserToCSVHourModel1 extends ToCSVParser implements BitCoinExRateGetterHour{	
+public abstract class ParserToCSVModel1 extends ToCSVParser{	
 	private PrintWriter addresses ;
 	private StringBuilder addStr = new StringBuilder();
 	private PrintWriter transactions ;
@@ -39,51 +34,34 @@ public class ParserToCSVHourModel1 extends ToCSVParser implements BitCoinExRateG
 	private PrintWriter outTran ;
 	private StringBuilder outStr = new StringBuilder();
 	
-	public ParserToCSVHourModel1(String[] datFileNames) throws FileNotFoundException {
+	public ParserToCSVModel1(ArrayList<String> datFileNames) throws FileNotFoundException {
 		super(datFileNames);
 		// define files to be written into
-		this.addresses = new PrintWriter(new File("./csvs/addresses.csv"));
+		File baseDir = new File(System.getProperty("user.home") + "/csvs");
+		if(!baseDir.exists()){
+			baseDir.mkdirs();
+		}
+		this.addresses = new PrintWriter(new File(System.getProperty("user.home") + "/csvs/addresses.csv"));
 		this.addStr = new StringBuilder();
-		this.addStr.append("address:ID(Addr),addr_tag_link,addr_tag\n");
-		this.transactions = new PrintWriter(new File("./csvs/transactions.csv"));
+		this.addStr.append("address:ID(Addr),addr_tag_link,addr_tag,time\n");
+		this.transactions = new PrintWriter(new File(System.getProperty("user.home") + "/csvs/transactions.csv"));
 		this.traStr = new StringBuilder();
 		this.traStr.append("tranHashString:ID(Trans),time\n");
-		this.inputs = new PrintWriter(new File("./csvs/inputs.csv"));
+		this.inputs = new PrintWriter(new File(System.getProperty("user.home") + "/csvs/inputs.csv"));
 		this.inputStr = new StringBuilder();
 		this.inputStr.append("addr:ID(SendAdd),tranHashString,value_bitcoin,value_dollar,type\n");
-		this.outputs = new PrintWriter(new File("./csvs/outputs.csv"));
+		this.outputs = new PrintWriter(new File(System.getProperty("user.home") + "/csvs/outputs.csv"));
 		this.outputStr = new StringBuilder();
 		this.outputStr.append("addr:ID(ReceAdd),tranHashString,value_bitcoin,value_dollar,type\n");
 
-		inTran = new PrintWriter(new File("./csvs/intran.csv"));
+		inTran = new PrintWriter(new File(System.getProperty("user.home") + "/csvs/intran.csv"));
 		inStr = new StringBuilder();
 		inStr.append(":START_ID(SendAdd),:END_ID(Trans)\n");
-		outTran = new PrintWriter(new File("./csvs/outtran.csv"));
+		outTran = new PrintWriter(new File(System.getProperty("user.home") + "/csvs/outtran.csv"));
 		outStr = new StringBuilder();
 		outStr.append(":START_ID(Trans),:END_ID(ReceAdd)\n");
 	}	
 
-	
-	/* (non-Javadoc)
-	 * @see basic.BitCoinExRateGetterDay#getDollarValDay(java.lang.String, java.lang.String)
-	 */
-	 // time is always in the format of "2014-03-11T08:27:57+0000"
-	public double getDollarValHour(String time, String value) throws IOException, JSONException{
-		double val = Long.parseLong(value);
-		String target = time.split("\\+")[0];
-	    DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-	    df.setTimeZone(new SimpleTimeZone(SimpleTimeZone.UTC_TIME, "UTC"));
-	    long timePara = 0;
-	    try {
-			Date result =  df.parse(target);
-			timePara = result.getTime()/1000;	
-		} catch (ParseException e) {
-			e.printStackTrace();
-		} 
-	    JSONObject rateJson = readJsonFromUrl("https://winkdex.com/api/v0/price?time=" + timePara);
-		double penny = rateJson.getInt("price");	
-		return val*BitCoinExRateGetterHour.satToBit*penny/100.0;
-	}
 	
 	
 	/* (non-Javadoc)
@@ -96,12 +74,12 @@ public class ParserToCSVHourModel1 extends ToCSVParser implements BitCoinExRateG
 		for (Block block : bfl) {
 			//comment out if not needed (i.e. when starting from the first block of a file)
 			// fill in the last second blockhash printed
-			if(block.getHashAsString().equals("0000000000000000026806253ad80b75a43ba9937984b5fb6e6826b2297744f2")){
-				readBl = true;
-				continue;
-			}else if(!readBl){
-				continue;
-			}
+//			if(block.getHashAsString().equals("0000000000000000026806253ad80b75a43ba9937984b5fb6e6826b2297744f2")){
+//				readBl = true;
+//				continue;
+//			}else if(!readBl){
+//				continue;
+//			}
 			System.out.println(block.getHashAsString());
 			System.out.println(System.currentTimeMillis() - time);
 			time = System.currentTimeMillis();
@@ -110,7 +88,7 @@ public class ParserToCSVHourModel1 extends ToCSVParser implements BitCoinExRateG
 			JSONObject blockAltJson = null;
 			Map<Object, JSONObject> tranFromBC = new HashMap<Object, JSONObject>(); //transaction information from blockchain.info
 			try{
-				blockJson = readJsonFromUrl("https://api.blocktrail.com/v1/btc/block/" + block.getHashAsString() + "/transactions?api_key=b88ae2fc47fdd1b7fd132ad189734a0c783a4f5f");
+				blockJson = readJsonFromUrl("https://api.blocktrail.com/v1/btc/block/" + block.getHashAsString() + "/transactions?api_key=" + Util.apiKey);
 				blockAltJson = readJsonFromUrl("https://blockchain.info/rawblock/" + block.getHashAsString());
 				JSONArray transAlt = blockAltJson.getJSONArray("tx");
 				for(int i = 0; i < transAlt.length(); i ++){
@@ -121,14 +99,14 @@ public class ParserToCSVHourModel1 extends ToCSVParser implements BitCoinExRateG
 			}catch(java.net.SocketException se){
 				this.end();
 				System.out.println("finish exception!");
-				System.exit(1);
+				System.exit(1);;
 			}
 			//System.out.println(blockJson);
 			JSONArray tas = blockJson.getJSONArray("data");
 			for(int i = 0; i < tas.length(); i ++){
 				JSONObject ta = tas.getJSONObject(i);
-				if(!ta.get("is_coinbase").toString().equals("true")){
-					String taHash = ta.get("hash").toString();
+				if(!ta.getString("is_coinbase").equals("true")){
+					String taHash = ta.getString("hash");
 					traStr.append(taHash);
 					traStr.append(",");
 					traStr.append(ta.get("time"));				
@@ -144,7 +122,16 @@ public class ParserToCSVHourModel1 extends ToCSVParser implements BitCoinExRateG
 								for(int k = 0; k < multiAdd.length(); k++){
 									multiAddList.append(multiAdd.get(k));
 									multiAddList.append(';');
-									addrSet.add(new Address(multiAdd.get(k).toString(), null, null));
+									JSONObject addrObj = null;
+									try{
+										addrObj = this.readJsonFromUrl("https://api.blocktrail.com/v1/btc/address/" + multiAdd.get(k) +"?api_key="+ Util.apiKey);
+									}catch(java.net.SocketException se){
+										this.end();
+										System.out.println("finish exception when getting address time!");
+										System.exit(1);;
+									}
+									String addrTime = addrObj.getString("first_seen");
+									addrSet.add(new AddressOT(multiAdd.get(k).toString(), null, null, addrTime));
 								}
 //								addrSet.add(multiAddList.toString());
 								inputStr.append(multiAddList.toString());
@@ -153,10 +140,12 @@ public class ParserToCSVHourModel1 extends ToCSVParser implements BitCoinExRateG
 								inputStr.append(',');
 								inputStr.append(inp.get("value"));
 								inputStr.append(',');
-								double temp = this.getDollarValHour(ta.get("time").toString(), inp.get("value").toString());
+								double temp = this.getDollarValDayorHour(ta.getString("time"), inp.getString("value"));
 								inputStr.append(temp);								
 								inputStr.append(',');
-								inputStr.append(inp.get("type"));		
+								inputStr.append(inp.get("type"));
+								inputStr.append(";");		
+								inputStr.append(inp.get("multisig"));
 								inputStr.append("\n");		
 								
 								//inStr :START_ID(SendAdd),:END_ID(Trans)
@@ -171,7 +160,7 @@ public class ParserToCSVHourModel1 extends ToCSVParser implements BitCoinExRateG
 								inputStr.append(',');
 								inputStr.append(inp.get("value"));
 								inputStr.append(',');
-								double temp = this.getDollarValHour(ta.get("time").toString(), inp.get("value").toString());
+								double temp = this.getDollarValDayorHour(ta.getString("time"), inp.getString("value"));
 								inputStr.append(temp);								
 								inputStr.append(',');
 								inputStr.append(inp.get("type"));
@@ -179,7 +168,7 @@ public class ParserToCSVHourModel1 extends ToCSVParser implements BitCoinExRateG
 								
 								// for address, addr_tag_link,addr_tag
 								JSONArray inputsArr = tranFromBC.get(taHash).getJSONArray("inputs");	 
-								this.getAddTagL(inputsArr, inp.get("address").toString(), true);
+								this.getAddTagL(inputsArr, inp.getString("address"), true);
 								
 								//inStr :START_ID(SendAdd),:END_ID(Trans)
 								inStr.append(inp.get("address"));
@@ -201,7 +190,16 @@ public class ParserToCSVHourModel1 extends ToCSVParser implements BitCoinExRateG
 								for(int k = 0; k < multiAdd.length(); k++){
 									multiAddList.append(multiAdd.get(k));
 									multiAddList.append(';');
-									addrSet.add(new Address(multiAdd.get(k).toString(), null, null));
+									JSONObject addrObj = null;
+									try{
+										addrObj = this.readJsonFromUrl("https://api.blocktrail.com/v1/btc/address/" + multiAdd.get(k) +"?api_key="+ Util.apiKey);
+									}catch(java.net.SocketException se){
+										this.end();
+										System.out.println("finish exception when getting address time!");
+										System.exit(1);;
+									}
+									String addrTime = addrObj.getString("first_seen");
+									addrSet.add(new AddressOT(multiAdd.get(k).toString(), null, null, addrTime));
 								}
 								outputStr.append(multiAddList.toString());
 								outputStr.append(',');
@@ -209,10 +207,12 @@ public class ParserToCSVHourModel1 extends ToCSVParser implements BitCoinExRateG
 								outputStr.append(',');
 								outputStr.append(outp.get("value"));
 								outputStr.append(',');
-								double temp = this.getDollarValHour(ta.get("time").toString(), outp.get("value").toString());
+								double temp = this.getDollarValDayorHour(ta.getString("time"), outp.getString("value"));
 								outputStr.append(temp);								
 								outputStr.append(',');
 								outputStr.append(outp.get("type"));	
+								outputStr.append(";");		
+								outputStr.append(outp.get("multisig"));	
 								outputStr.append("\n");		
 								
 								//outStr :START_ID(Trans),:END_ID(ReceAdd)
@@ -227,7 +227,7 @@ public class ParserToCSVHourModel1 extends ToCSVParser implements BitCoinExRateG
 								outputStr.append(',');
 								outputStr.append(outp.get("value"));
 								outputStr.append(',');
-								double temp = this.getDollarValHour(ta.get("time").toString(), outp.get("value").toString());
+								double temp = this.getDollarValDayorHour(ta.getString("time"), outp.getString("value"));
 								outputStr.append(temp);								
 								outputStr.append(',');
 								outputStr.append(outp.get("type"));
@@ -235,7 +235,7 @@ public class ParserToCSVHourModel1 extends ToCSVParser implements BitCoinExRateG
 								
 								// for addr_tag_link,addr_tag
 								JSONArray outs = tranFromBC.get(taHash).getJSONArray("out");
-								super.getAddTagL(outs, outp.get("address").toString(), false);
+								super.getAddTagL(outs, outp.getString("address"), false);
 								
 								//outStr :START_ID(Trans),:END_ID(ReceAdd)
 								outStr.append(taHash);
@@ -257,28 +257,6 @@ public class ParserToCSVHourModel1 extends ToCSVParser implements BitCoinExRateG
 		System.out.println("finish!");
 	}
 	
-
-
-	public JSONObject readJsonFromUrl(String url) throws IOException, JSONException {
-		System.setProperty("http.agent", "Chrome");
-		InputStream is = null;
-		try{
-			is = new URL(url).openStream();			
-		}catch(Exception e){
-			this.end();
-			System.out.println("finish exception (some transaction not fully parsed)!");
-			e.printStackTrace();
-			System.exit(1);	
-		}
-		try {
-			BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
-			String jsonText = ToCSVParser.readAll(rd);
-			JSONObject json = new JSONObject(jsonText);
-			return json;
-		} finally {
-			is.close();
-		}
-	}
 	
 	protected void end(){
 		this.transactions.write(traStr.toString());
@@ -292,7 +270,7 @@ public class ParserToCSVHourModel1 extends ToCSVParser implements BitCoinExRateG
 		this.outTran.write(outStr.toString());
 		this.outTran.close();
 		
-		for(Address ad : this.addrSet){
+		for(AddressOT ad : this.addrSet){
 			this.addStr.append(ad);
 			this.addStr.append("\n");					
 		}				
