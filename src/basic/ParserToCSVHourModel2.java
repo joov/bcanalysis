@@ -1,12 +1,9 @@
 package basic;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.SimpleTimeZone;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.json.*;
 
@@ -20,11 +17,12 @@ import org.json.*;
  *
  */
 public class ParserToCSVHourModel2 extends ParserToCSVModel2 implements BitCoinExRateGetterHour{		
+	private Map<Long, Double> timeExchangeRate = new HashMap<Long, Double>();
+
 	
-	public ParserToCSVHourModel2(ArrayList<String> datFileNames) throws FileNotFoundException {
-		super(datFileNames);
+	public ParserToCSVHourModel2(int numBlock, boolean begin, String lastSecond, int folderCounter) throws FileNotFoundException {
+		super(numBlock, begin, lastSecond, folderCounter);
 	}
-	
 	
 	protected double getDollarValDayorHour(String time, String value) throws JSONException, IOException{
 		return this.getDollarValHour(time, value);
@@ -35,19 +33,23 @@ public class ParserToCSVHourModel2 extends ParserToCSVModel2 implements BitCoinE
 	 */
 	 // time is always in the format of "2014-03-11T08:27:57+0000"
 	public double getDollarValHour(String time, String value) throws IOException, JSONException{
-		double val = Long.parseLong(value);
-		String target = time.split("\\+")[0];
-	    DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-	    df.setTimeZone(new SimpleTimeZone(SimpleTimeZone.UTC_TIME, "UTC"));
+		double val = (double)(Long.parseLong(value));
+	    
 	    long timePara = 0;
 	    try {
-			Date result =  df.parse(target);
-			timePara = result.getTime()/1000;	
+			timePara = Util.getLongTimeClosestMinute(time)/1000;
 		} catch (ParseException e) {
 			e.printStackTrace();
 		} 
-	    JSONObject rateJson = readJsonFromUrl("https://winkdex.com/api/v0/price?time=" + timePara);
-		double penny = rateJson.getInt("price");	
+	    double penny = 0.0;
+	    if(this.timeExchangeRate.containsKey(new Long(timePara))){
+	    	penny = this.timeExchangeRate.get(new Long(timePara));
+	    }else{
+		    JSONObject rateJson = this.readJsonFromUrl("https://winkdex.com/api/v0/price?time=" + timePara);
+			penny = (double)(rateJson.getInt("price"));
+			this.timeExchangeRate.put(new Long(timePara), new Double(penny));
+	    }
+
 		return val*BitCoinExRateGetterHour.SATTOBIT*penny/100.0;
 	}
 }

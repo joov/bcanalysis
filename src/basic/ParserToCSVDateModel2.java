@@ -1,7 +1,8 @@
 package basic;
 
 import java.io.*;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.json.*;
 
@@ -13,9 +14,11 @@ import org.json.*;
  *
  */
 public class ParserToCSVDateModel2 extends ParserToCSVModel2 implements BitCoinExRateGetterDay{	
+	private Map<String, Double> timeExchangeRate = new HashMap<String, Double>();
+
 	
-	public ParserToCSVDateModel2(ArrayList<String> datFileNames) throws FileNotFoundException {
-		super(datFileNames);
+	public ParserToCSVDateModel2(int numBlock, boolean begin, String lastSecond, int folderCounter) throws FileNotFoundException {
+		super(numBlock, begin, lastSecond, folderCounter);
 	}
 	
 	protected double getDollarValDayorHour(String time, String value) throws JSONException, IOException{
@@ -27,16 +30,25 @@ public class ParserToCSVDateModel2 extends ParserToCSVModel2 implements BitCoinE
 	 */
 	 // time is always in the format of "2014-03-11T08:27:57+0000"
 	public double getDollarValDay(String time, String value) throws IOException, JSONException{
-		double val = Long.parseLong(value);
+		double val = (double)(Long.parseLong(value));
+
 		String target = time.split("\\+")[0];
 		String date = target.split("T")[0];
-	    JSONObject rateJson = readJsonFromUrl("https://api.coindesk.com/v1/bpi/historical/close.json?start=" 
-	    + date + "&end=" + date);
-	    JSONObject bpi = rateJson.getJSONObject("bpi");
-	    double dollar = bpi.getDouble(date);
-		System.out.println("time");
-		System.out.println(time);
-		System.out.println(rateJson.get("timestamp"));		
+	    double dollar = 0.0;
+		if(this.timeExchangeRate.containsKey(date)){
+			dollar = this.timeExchangeRate.get(date);
+	    }else{
+		    JSONObject rateJson = readJsonFromUrl("https://api.coindesk.com/v1/bpi/historical/close.json?start=" 
+		    	    + date + "&end=" + date);
+		    JSONObject bpi = rateJson.getJSONObject("bpi");
+		    dollar = bpi.getDouble(date);
+			this.timeExchangeRate.put(date, new Double(dollar));
+	    }
+
+//		System.out.println("time");
+//		System.out.println(time);
+//		System.out.println(rateJson.get("timestamp"));	
+			    
 		return val*BitCoinExRateGetterDay.SATTOBIT*dollar;
 	}
 

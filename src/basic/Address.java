@@ -37,7 +37,7 @@ public class Address{
 	 * overrides hashCode() in Object
 	 */
 	public int hashCode() {
-		return 0;	
+		return this.address.hashCode();	
 	}
 	
 	/**

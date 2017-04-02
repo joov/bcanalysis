@@ -1,7 +1,8 @@
 package basic;
 
 import java.io.BufferedReader;
-import java.io.File;
+//import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -10,11 +11,11 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
+//import java.util.List;
 
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.utils.BlockFileLoader;
+//import org.bitcoinj.core.NetworkParameters;
+//import org.bitcoinj.params.MainNetParams;
+//import org.bitcoinj.utils.BlockFileLoader;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,23 +26,59 @@ import org.json.JSONObject;
  *
  */
 public abstract class ToCSVParser {
-	BlockFileLoader bfl;
-	protected HashSet<AddressOT> addrSet = new HashSet<AddressOT>();
+	protected int folderCounter;
+	protected String lastHashFromBefore;
+
+	protected ArrayList<String> blocklists = new ArrayList<String>();
+	protected AddressSet addrSet = new AddressSet();
+	protected HashSet<AddressJSON> addrJSet = new HashSet<AddressJSON>();
+	protected ArrayList<Transaction> tranSet = new ArrayList<Transaction>();
+	protected ArrayList<Wallet> wallSet = new ArrayList<Wallet>();
+
 
 	
 	/**
 	 * Constructor
 	 * @param datFileNames the array of dat file name in form of .dat
 	 */
-	public ToCSVParser(ArrayList<String> datFileNames){
-		// Arm the blockchain file loader.
-		NetworkParameters np = new MainNetParams();
-		List<File> blockChainFiles = new ArrayList<File>();
-		for(String name : datFileNames){
-			blockChainFiles.add(new File("C:\\Users\\tsutomu\\AppData\\Roaming\\Bitcoin\\blocks\\" + name));			
-		}
-		this.bfl = new BlockFileLoader(np, blockChainFiles);
+	public ToCSVParser(int numBlock, boolean begin, String lastHashFromBefore, int folderCounter){
+		this.folderCounter = folderCounter;
+		this.lastHashFromBefore = lastHashFromBefore;
+		int counter = 0;
+		boolean readBl = begin;
 
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader("blockhash.txt"));
+			String line;
+			while ((line = reader.readLine()) != null && counter < numBlock) {
+				if(!line.endsWith(".dat") ){
+					if (line.equals(this.lastHashFromBefore)) {  
+						readBl = true;
+						continue;
+					}
+					if(readBl){
+						this.blocklists.add(line);
+						counter++;						
+					}
+				}
+			}
+			reader.close();
+		} catch (Exception e) {
+			System.err.format("reading exception");
+			e.printStackTrace();
+		}
+	}
+	
+	protected void mergeWalletIfPossible(){
+		for(int i = 0; i < this.wallSet.size(); i ++){
+			for(int j = i+1; j < this.wallSet.size(); j ++){
+				Wallet w1 = this.wallSet.get(i);
+				Wallet w2 = this.wallSet.get(j);
+				if(w1.equals(w2)){
+					w1.merge(this, w2);
+				}
+			}
+		}
 	}
 	
 	/**
@@ -70,12 +107,15 @@ public abstract class ToCSVParser {
 		System.setProperty("http.agent", "Chrome");
 		InputStream is = null;
 		try{
+			if(url.startsWith("https://winkdex.com/api/")){
+				System.out.println(url);				
+			}
 			is = new URL(url).openStream();			
 		}catch(Exception e){
 			this.end();
 			System.out.println("finish exception (some transaction not fully parsed)!");
 			e.printStackTrace();
-			System.exit(1);	
+//			System.exit(1);	
 		}
 		try {
 			BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
@@ -125,7 +165,7 @@ public abstract class ToCSVParser {
 	 * @throws JSONException
 	 * @throws IOException 
 	 */
-	protected void getAddTagL(JSONArray xputs, String address, boolean isInput) throws JSONException, IOException{
+	protected void addAddrWithTagL(JSONArray xputs, String address, boolean isInput) throws JSONException, IOException{
 		JSONObject item = null;
 		if(isInput){
 			for(int i = 0; i < xputs.length(); i ++){
@@ -150,37 +190,70 @@ public abstract class ToCSVParser {
 			}		
 		}
 		
-		this.addrSet.remove(new Address(address, null, null));
-		JSONObject addrObj = null;
+		AddressJSON addrObj = this.getAddrJSON(address);
+		this.addrSet.addAddrAccJSON(address, item, addrObj);
+	}
+	
+	protected String getLastHash(){
+		return this.lastHashFromBefore;
+	}
+	
+	/**
+	 * If the corresponding AddressJSON is present in this.addrJSet, 
+	 * this method will return the one already present, otherwise the method
+	 * will call the api to generate and return the AddressJSON, and add it to this.addrJSet
+	 * 
+	 * @param address
+	 * @return
+	 */
+	protected AddressJSON getAddrJSON(String address){
+		for(AddressJSON aj : this.addrJSet){
+			if(aj.getAddr().equals(address)){
+				return aj;
+			}
+		}
+		this.mergeWalletIfPossible();  
+		AddressJSON aJ = null;
 		try{
-			addrObj = this.readJsonFromUrl("https://api.blocktrail.com/v1/btc/address/" + address +"?api_key= "+ Util.apiKey);
-		}catch(java.net.SocketException se){
+			JSONObject addrObj = this.readJsonFromUrl("https://api.blocktrail.com/v1/btc/address/" + address +"?api_key="+ Util.apiKey);
+			aJ = new AddressJSON(addrObj);
+			this.addrJSet.add(aJ);
+		}catch(IOException se){
 			this.end();
 			System.out.println("finish exception when getting address time!");
-			System.exit(1);;
+//			System.exit(1);;
 		}
-		String time = addrObj.getString("first_seen");
-		
-		// no addr entry or no correct addr entry
-		if(!(item.has("addr") && item.getString("addr").equals(address))){
-			this.addrSet.add(new AddressOT(address, null, null, time));
-			return;
-		}
-		if (item.has("addr_tag_link") || item.has("addr_tag")) {
-			if (item.has("addr_tag_link") && item.has("addr_tag")) {
-				System.out.println(address);
-				this.addrSet.remove(new AddressOT(address, item.getString("addr_tag_link"), null, time));
-				this.addrSet.remove(new AddressOT(address, null, item.getString("addr_tag"), time));
-				this.addrSet.add(new AddressOT(address, item.getString("addr_tag_link"), item.getString("addr_tag"), time));
-			} else if (item.has("addr_tag_link")) {
-				System.out.println(address);
-				this.addrSet.add(new AddressOT(address, item.getString("addr_tag_link"), null, time));
-			} else {
-				System.out.println(address);
-				this.addrSet.add(new AddressOT(address, null, item.getString("addr_tag"), time));
+		return aJ;
+	}
+	
+	
+	/**
+	 * adjust all transaction such that they have the new wallet as the 
+	 * sending/receiving address
+	 * @param w
+	 */
+	protected void adjustTxSetAccWallet(Wallet wOld, Wallet wNew){
+		for(int i = 0; i < this.tranSet.size(); i++){
+			Transaction t = this.tranSet.get(i);
+			if(t.getSender().getPrimAdd().equals(wOld.getPrimAdd())){
+				t.setSendWallet(wNew);
+				if(t.getReceiver().getPrimAdd().equals(t.getSender().getPrimAdd())){
+					this.tranSet.remove(t);
+				}
 			}
-		}else{
-			this.addrSet.add(new AddressOT(address, null, null, time));						
+			if(t.getReceiver().getPrimAdd().equals(wOld.getPrimAdd())){
+				t.setReceiveWallet(wNew);
+				if(t.getReceiver().getPrimAdd().equals(t.getSender().getPrimAdd())){
+					this.tranSet.remove(t);
+				}
+			}
 		}
+	}
+	
+	protected void addToWallList(Wallet toAdd){
+		this.wallSet.add(toAdd);
+	}
+	protected void removeFromWallList(Wallet toRe){
+		this.wallSet.remove(toRe);
 	}
 }

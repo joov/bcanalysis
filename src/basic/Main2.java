@@ -1,10 +1,6 @@
 package basic;
 
 import java.io.IOException;
-import java.util.ArrayList;
-
-import org.bitcoinj.core.Context;
-import org.bitcoinj.params.MainNetParams;
 import org.json.JSONException;
 
 /**
@@ -14,13 +10,33 @@ import org.json.JSONException;
  *
  */
 public class Main2 {
+	public static String lastBlockHash = "000000000000000006c21862a573610a9394024624058d637e4ec3f5cd987774"; //
 	public static void main(String[] args) throws JSONException, IOException{
-		Context.getOrCreate(MainNetParams.get());
-		ArrayList<String> strList = new ArrayList<String>(); 
-		for(int i = 408; i < 726; i++){
-			strList.add("blk00"+i+".dat");
+//		ParserToCSVHourModel2 p = new ParserToCSVHourModel2(30, true, null, 1);
+//		p.parse();
+		
+		//after getting rid of all "System.exit" and filling in Main2.lastBlockHash
+		// not to be used when this is the first parse
+		int counter = 4;
+		while(true){
+			ParserToCSVHourModel2 p = new ParserToCSVHourModel2(30, false, Main2.lastBlockHash, counter);
+			counter++;
+			try{
+				p.parse();				
+			}catch(java.lang.NullPointerException ne){
+				ne.printStackTrace();
+				try {
+					Thread.sleep(300000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
-		ParserToCSVHourModel2 p1 = new ParserToCSVHourModel2(strList);
-		p1.parse();
+		
 	}
 }

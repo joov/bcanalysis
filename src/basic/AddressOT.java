@@ -9,30 +9,60 @@ import java.util.Date;
  *
  */
 public class AddressOT extends Address{
-	private long timestamp; //in seconds
-	private String time;
-
-	public AddressOT(String address, String addrTagLink, String addrTag, String time) {
+	private long firstSeen; //in seconds
+	private String firstSeenTime;
+	private long lastSeen; //in seconds
+	private String lastSeenTime;
+	
+	
+	public AddressOT(String address, String addrTagLink, String addrTag, String firstSeen, String lastSeen) {
 		super(address, addrTagLink, addrTag);	  
 	    try {
-			this.time = time.split("\\+")[0];
-			Date temp =  Util.getTime(time);
-			this.timestamp = temp.getTime()/1000;	
+			this.firstSeenTime = firstSeen;
+			Date temp =  Util.getTime(this.firstSeenTime);
+			this.firstSeen = temp.getTime()/1000;	
+			
+			this.lastSeenTime = lastSeen;
+			temp =  Util.getTime(this.firstSeenTime);
+			this.lastSeen = temp.getTime()/1000;
 		} catch (ParseException e) {
 			e.printStackTrace();
 		} 
 	}
 	
-	public String getTime(){
-		return this.time;
+	public AddressOT(String address, String addrTagLink, String addrTag, AddressJSON adJ) {
+		super(address, addrTagLink, addrTag);	  
+	    try {
+			this.firstSeenTime = adJ.getFirstSeen();
+			Date temp =  Util.getTime(this.firstSeenTime);
+			this.firstSeen = temp.getTime()/1000;	
+			
+			this.lastSeenTime = adJ.getLastSeen();
+			temp =  Util.getTime(this.firstSeenTime);
+			this.lastSeen = temp.getTime()/1000;
+		} catch (ParseException e) {
+			e.printStackTrace();
+		} 
 	}
 	
-	public long getTimestamp(){
-		return this.timestamp;
+	public String getFirstSeen(){
+		return this.firstSeenTime;
+	}
+	
+	public long getFirstSeenStamp(){
+		return this.firstSeen;
+	}
+	
+	public String getLastSeen(){
+		return this.lastSeenTime;
+	}
+	
+	public long getLastSeenStamp(){
+		return this.lastSeen;
 	}
 	
 	//addrID,addr_tag_link,addr_tag,time
 	public String toString(){
-		return super.toString() + ',' + this.time;
+		return super.toString() + ',' + this.firstSeenTime+ ',' + this.lastSeenTime;
 	}
 }

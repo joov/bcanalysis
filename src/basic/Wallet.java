@@ -1,5 +1,6 @@
 package basic;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -12,20 +13,66 @@ import java.util.HashSet;
  */
 public class Wallet {
 	private HashSet<AddressT> addrs = new HashSet<AddressT>();
-	private String primAddr;
-	private long timestamp;
-	private String time;
+	private String primAddr;  // the address which also provide the first_seen info, only serve as an id
+	private long firstSeen;
+	private String firstSeenTime;
+	private long lastSeen;
+	private String lastSeenTime;
 	
-	public Wallet(AddressT primAddr){
-		this.primAddr = primAddr.getAddr();
-		this.time = primAddr.getTime();
-		this.timestamp = primAddr.getTimestamp();
-		this.addrs.add(primAddr);
+	public Wallet(ArrayList<AddressT> arrAddr){
+		AddressT earliest = arrAddr.get(0);
+		for(int s = 1; s < arrAddr.size(); s ++){
+			if(earliest.getFirstSeenStamp() > arrAddr.get(s).getFirstSeenStamp()){
+				earliest = arrAddr.get(s);
+			}
+		}
+		AddressT latest = arrAddr.get(0);
+		for(int s = 1; s < arrAddr.size(); s ++){
+			if(latest.getLastSeenStamp() < arrAddr.get(s).getLastSeenStamp()){
+				latest = arrAddr.get(s);
+			}
+		}
+		this.primAddr = earliest.getAddr();
+		this.firstSeenTime = earliest.getFirstSeen();
+		this.firstSeen = earliest.getFirstSeenStamp();
+		this.lastSeenTime = latest.getLastSeen();
+		this.lastSeen = latest.getLastSeenStamp();
+		this.add(arrAddr);	
+	}
+	
+	public Wallet(AddressT primBegAddr, AddressT primEndAddr){
+		this.primAddr = primBegAddr.getAddr();
+		this.firstSeenTime = primBegAddr.getFirstSeen();
+		this.firstSeen = primBegAddr.getFirstSeenStamp();
+		this.lastSeenTime = primEndAddr.getLastSeen();
+		this.lastSeen = primEndAddr.getLastSeenStamp();
+		primBegAddr.setWallet(this.primAddr);
+		primEndAddr.setWallet(this.primAddr);
+		this.addrs.add(primBegAddr);
+		this.addrs.add(primEndAddr);
+	}
+	
+	public void setLastSeen(String lastSeen){
+		this.lastSeenTime = lastSeen.split("\\+")[0];
+		try {
+			this.lastSeen = Util.getTime(this.lastSeenTime).getTime()/1000;
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void setFirstSeen(String firstSeen){
+		this.lastSeenTime = firstSeen.split("\\+")[0];
+		try {
+			this.lastSeen = Util.getTime(this.lastSeenTime).getTime()/1000;
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	//primAddress,time
 	public String toString(){
-		return this.primAddr + ',' + this.time+ ',' + this.addrs.size();
+		return this.primAddr + ',' + this.firstSeenTime + ',' + this.lastSeenTime + ',' + this.addrs.size();
 	}
 	
 	
@@ -36,6 +83,14 @@ public class Wallet {
 	public void add(AddressT addr){
 		addr.setWallet(this.primAddr);
 		this.addrs.add(addr);
+		if(this.getFirstSeenStamp() > addr.getFirstSeenStamp()){
+			this.firstSeen = addr.getFirstSeenStamp();
+			this.firstSeenTime = addr.getFirstSeen();
+		}
+		if(this.getLastSeenStamp() < addr.getLastSeenStamp()){
+			this.lastSeen = addr.getLastSeenStamp();
+			this.lastSeenTime = addr.getLastSeen();
+		}
 	}
 	
 	/**
@@ -43,10 +98,9 @@ public class Wallet {
 	 * @param addr
 	 */
 	public void add(Collection<AddressT> addrs){
-		for(AddressT a: addrs){
-			a.setWallet(this.primAddr);
-		}
-		this.addrs.addAll(addrs);
+		for(AddressT addr: addrs){
+			this.add(addr);
+		}		
 	}
 	
 	
@@ -61,12 +115,20 @@ public class Wallet {
 		return this.primAddr;
 	}
 	
-	public long getTimestamp(){
-		return this.timestamp;
+	public String getFirstSeen(){
+		return this.firstSeenTime;
 	}
 	
-	public String getTime(){
-		return this.time;
+	public long getFirstSeenStamp(){
+		return this.firstSeen;
+	}
+	
+	public String getLastSeen(){
+		return this.lastSeenTime;
+	}
+	
+	public long getLastSeenStamp(){
+		return this.lastSeen;
 	}
 	
 	public HashSet<AddressT> getAddrSet(){
@@ -91,18 +153,14 @@ public class Wallet {
 	}
 	
 	
-	public void merge(ParserToCSVModel2 parser, Wallet w1){
-		if(w1.getTimestamp() < this.getTimestamp()){
-			for(AddressT a : this.addrs){
-				a.setWallet(w1.primAddr);
-			}
-			w1.addrs.addAll(this.addrs);
+	public void merge(ToCSVParser parser, Wallet w1){
+		if(w1.getFirstSeenStamp() < this.getFirstSeenStamp()){
+			w1.add(this.addrs);
+			parser.adjustTxSetAccWallet(this, w1);
 			parser.removeFromWallList(this);
 		}else{
-			for(AddressT a : w1.addrs){
-				a.setWallet(this.primAddr);
-			}
-			this.addrs.addAll(w1.addrs);
+			this.add(w1.addrs);
+			parser.adjustTxSetAccWallet(w1, this);
 			parser.removeFromWallList(w1);
 		}
 	}

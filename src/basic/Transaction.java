@@ -39,10 +39,7 @@ public class Transaction {
 		} catch (ParseException e) {
 			e.printStackTrace();
 		} 
-	    
 	    this.sendWallet = sender;
-	    
-		
 //		if the sender/receiver wallet is already in availWallet
 		boolean receiverWPresent = false;		
 		for(Wallet w : availWallet){
@@ -53,7 +50,7 @@ public class Transaction {
 		}
 
 		if(!receiverWPresent){	
-			this.receiWallet = new Wallet(receiver);
+			this.receiWallet = new Wallet(receiver, receiver);
 			parser.addToWallList(this.receiWallet);
 		}
 		
@@ -115,14 +112,8 @@ public class Transaction {
 //			}			
 //			this.sendWallet = new Wallet(earliest);
 //		}
-		if(!receiverWPresent){
-			AddressT earliest = receivers.get(0);
-			for(int i = 1; i < receivers.size(); i ++){
-				if(earliest.getTimestamp() > receivers.get(i).getTimestamp()){
-					earliest = receivers.get(i);
-				}
-			}	
-			this.receiWallet = new Wallet(earliest);
+		if(!receiverWPresent){	
+			this.receiWallet = new Wallet(receivers);
 			parser.addToWallList(this.receiWallet);
 		}
 		
