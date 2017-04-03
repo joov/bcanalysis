@@ -93,25 +93,20 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 							if(inp.get("type").equals("multisig")){
 								JSONArray multiAdd = inp.getJSONArray("multisig_addresses");
 								for(int k = 0; k < multiAdd.length(); k++){
-									if(!this.addrJSet.contains(new AddressJSON(multiAdd.get(k).toString()))){
+									AddressT addrToAdd= this.addrSet.getCertainAddress(multiAdd.get(k).toString());
+									if(addrToAdd == null){
 										AddressJSON addrJ = this.getAddrJSON(multiAdd.get(k).toString());
-										AddressT addrToAdd = new AddressT(multiAdd.get(k).toString(), null, null, addrJ, null, true);
-										inputAddrsTa.add(addrToAdd);
-										this.addrSet.add(addrToAdd);
-									}else{
-										AddressT addr = this.addrSet.getCertainAddress(multiAdd.get(k).toString());
-										if(!addr.getMulti()){
-											String primWalletAddr = addr.getPrimWAdd();
-											String addrTag = addr.getAddTag();
-											String addrLink = addr.getAddLink();
-											String firstSeen = addr.getFirstSeen();
-											String lastSeen = addr.getLastSeen();
-											this.addrSet.remove(addr);
-											AddressT addrToAdd = new AddressT(multiAdd.get(k).toString(), addrLink, addrTag, firstSeen, lastSeen, primWalletAddr, true);
-											inputAddrsTa.add(addrToAdd);
-											this.addrSet.add(addrToAdd);											
-										}										
+										addrToAdd = new AddressT(multiAdd.get(k).toString(), null, null, addrJ, null, true);	
 									}
+									if(!this.addrSet.add(addrToAdd)){
+										if(!addrToAdd.getMulti()){
+											this.addrSet.remove(addrToAdd);
+											addrToAdd.setMultiTrue();
+											this.addrSet.add(addrToAdd);
+										}
+									}
+									inputAddrsTa.add(addrToAdd);
+									this.addrSet.add(addrToAdd);
 								}								
 							}else if(inp.has("address") && inp.get("address") != null && inp.getLong("value") != 0){
 								// for addresses which might have addr_tag_link,addr_tag
@@ -155,17 +150,20 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 								ArrayList<AddressT> multiSigAdd = new ArrayList<AddressT>();
 								JSONArray multiAdd = outp.getJSONArray("multisig_addresses");
 								for(int k = 0; k < multiAdd.length(); k++){
-									AddressJSON addrJ = this.getAddrJSON(multiAdd.get(k).toString());
-									AddressT addrToAdd = new AddressT(multiAdd.get(k).toString(), null, null, addrJ, null, true);
-									multiSigAdd.add(addrToAdd);
+									AddressT addrToAdd= this.addrSet.getCertainAddress(multiAdd.get(k).toString());
+									if(addrToAdd == null){
+										AddressJSON addrJ = this.getAddrJSON(multiAdd.get(k).toString());
+										addrToAdd = new AddressT(multiAdd.get(k).toString(), null, null, addrJ, null, true);	
+									}
 									if(!this.addrSet.add(addrToAdd)){
-										AddressT addr = this.addrSet.getCertainAddress(multiAdd.get(k).toString());
-										if(!addr.getMulti()){
-											this.addrSet.remove(addr);
-											addr.setMultiTrue();
-											this.addrSet.add(addr);
+										if(!addrToAdd.getMulti()){
+											this.addrSet.remove(addrToAdd);
+											addrToAdd.setMultiTrue();
+											this.addrSet.add(addrToAdd);
 										}
 									}
+									multiSigAdd.add(addrToAdd);
+									this.addrSet.add(addrToAdd);
 								}
 								boolean includedInSenderWallet = false;
 								String estChanAddr = ta.get("estimated_change_address").toString();

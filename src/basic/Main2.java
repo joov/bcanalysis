@@ -10,14 +10,14 @@ import org.json.JSONException;
  *
  */
 public class Main2 {
-	public static String lastBlockHash = "000000000000000006c21862a573610a9394024624058d637e4ec3f5cd987774"; //
+	public static String lastBlockHash = "0000000000000000012f0d787bfcf78b78d6ea83fbe9354844717281e5ba485a"; //
 	public static void main(String[] args) throws JSONException, IOException{
 //		ParserToCSVHourModel2 p = new ParserToCSVHourModel2(30, true, null, 1);
 //		p.parse();
 		
 		//after getting rid of all "System.exit" and filling in Main2.lastBlockHash
 		// not to be used when this is the first parse
-		int counter = 4;
+		int counter = 9;
 		while(true){
 			ParserToCSVHourModel2 p = new ParserToCSVHourModel2(30, false, Main2.lastBlockHash, counter);
 			counter++;
@@ -26,7 +26,13 @@ public class Main2 {
 			}catch(java.lang.NullPointerException ne){
 				ne.printStackTrace();
 				try {
-					Thread.sleep(300000);
+					Thread.sleep(600000);  //increase the sleeping time, if the program is not able to finish off one 
+					//block before writing to csv files (just open the last few csv files generated (the files 
+					//are in the folder named in csv + a number. So the last few csv files are
+					//the ones in the folders with name containing the biggest number (such as csv84)), if the 
+					//address.csv has around 300 entries or less, or has more "null" entries than non-null entries in the sixth colum "primWallAdd", 
+					//then it is quite likely that the program is not able to finish off one 
+					//block before writing to csv files)
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
