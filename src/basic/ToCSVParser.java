@@ -27,7 +27,7 @@ import org.json.JSONObject;
  */
 public abstract class ToCSVParser {
 	protected int folderCounter;
-	protected String lastHashFromBefore;
+	protected String lastBlockHashFromBefore;
 
 	protected ArrayList<String> blocklists = new ArrayList<String>();
 	protected AddressSet addrSet = new AddressSet();
@@ -43,7 +43,7 @@ public abstract class ToCSVParser {
 	 */
 	public ToCSVParser(int numBlock, boolean begin, String lastHashFromBefore, int folderCounter){
 		this.folderCounter = folderCounter;
-		this.lastHashFromBefore = lastHashFromBefore;
+		this.lastBlockHashFromBefore = lastHashFromBefore;
 		int counter = 0;
 		boolean readBl = begin;
 
@@ -52,7 +52,7 @@ public abstract class ToCSVParser {
 			String line;
 			while ((line = reader.readLine()) != null && counter < numBlock) {
 				if(!line.endsWith(".dat") ){
-					if (line.equals(this.lastHashFromBefore)) {  
+					if (line.equals(this.lastBlockHashFromBefore)) {  
 						readBl = true;
 						continue;
 					}
@@ -195,7 +195,7 @@ public abstract class ToCSVParser {
 	}
 	
 	protected String getLastHash(){
-		return this.lastHashFromBefore;
+		return this.lastBlockHashFromBefore;
 	}
 	
 	/**

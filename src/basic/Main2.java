@@ -12,15 +12,17 @@ import org.json.JSONException;
 public class Main2 {
 	
 	//to be change to the output of the String in the output after "Last Hash: " in the last parse
-	public static String lastBlockHash = "0000000000000000012f0d787bfcf78b78d6ea83fbe9354844717281e5ba485a"; //
+	public static String lastBlockHash = "0000000000000000045ad6e33fef57daf6bdf15ade0f8e36b7a93892a2509c39"; //
+	public static String lastTranHash = "ea93bc7a805b79fcdce4a5413058c2ee3a3c3b61419b5b1e965c2eb431716059"; //
 	
 	public static void main(String[] args) throws JSONException, IOException{
 //		ParserToCSVHourModel2 p = new ParserToCSVHourModel2(30, true, null, 1);
 //		p.parse();
 		
-		int counter = 9;
+		int counter = 13;
 		while(true){
-			ParserToCSVHourModel2 p = new ParserToCSVHourModel2(30, false, Main2.lastBlockHash, counter);
+			System.out.println(counter);
+			ParserToCSVHourModel2 p = new ParserToCSVHourModel2(30, false, Main2.lastBlockHash, Main2.lastTranHash, counter);
 			counter++;
 			try{
 				p.parse();				

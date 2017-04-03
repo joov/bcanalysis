@@ -30,8 +30,11 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 	private PrintWriter wallet;
 	private StringBuilder wallStr = new StringBuilder();
 	
-	public ParserToCSVModel2(int numBlock, boolean begin, String lastHashFromBefore, int folderCounter) throws FileNotFoundException {
-		super(numBlock, begin, lastHashFromBefore, folderCounter);
+	private String lastTranHashFromBefore;
+	
+	public ParserToCSVModel2(int numBlock, boolean begin, String lastBlockHashFromBefore, String lastTranHashFromBefore, int folderCounter) throws FileNotFoundException {
+		super(numBlock, begin, lastBlockHashFromBefore, folderCounter);
+		this.lastTranHashFromBefore = lastTranHashFromBefore;
 		// define files to be written into
 		String folderPath = Util.path + this.folderCounter;
 		File baseDir = new File(System.getProperty("user.home") + folderPath );
@@ -57,6 +60,8 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 	 * @see basic.ToCSVParser#parse()
 	 */
 	public void parse() throws JSONException, IOException{
+		boolean justStarted = true;
+
 		// Iterate over the blocks in the dataset.
 		for (String block : this.blocklists) {
 			System.out.println(block);
@@ -79,9 +84,35 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 //				System.exit(1);
 			}
 			//System.out.println(blockJson);
+			
 			JSONArray tas = blockJson.getJSONArray("data");
 			for(int i = 0; i < tas.length(); i ++){
 				JSONObject ta = tas.getJSONObject(i);
+				if(justStarted){
+					justStarted = false;
+					if(this.lastTranHashFromBefore != null){	
+						while(i < tas.length()){
+							ta = tas.getJSONObject(i);
+							if(ta.getString("hash").equals(this.lastTranHashFromBefore)){
+								i++;
+								ta = tas.getJSONObject(i);
+								break;
+							}else{
+								i++;
+								continue;
+							}
+						}
+						if(i == tas.length()){
+							this.lastTranHashFromBefore = null;
+							i = 0;
+							ta = tas.getJSONObject(i);
+						}
+					}else{
+						System.out.println("this.lastTranHashFromBefore == null");
+						ta = tas.getJSONObject(i);
+					}
+				}
+				
 				if(!ta.get("is_coinbase").toString().equals("true")){
 					String taHash = ta.getString("hash");
 					//input addr:ID(SendAdd),tranHashString,value,type,addr_tag_link,addr_tag
@@ -225,18 +256,20 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 					for(AddressT a : inputWallAdds){
 						a.setWallet(inputWall.getPrimAdd());
 					}
+					this.lastTranHashFromBefore = taHash;
 				}else{
 					continue;
 				}
 			}
-			this.lastHashFromBefore = block;
+			this.lastBlockHashFromBefore = block;
 		}
 		this.end();
 		System.out.println("finish!");
 	}
 	
 	protected void end(){	
-		Main2.lastBlockHash = this.lastHashFromBefore;
+		Main2.lastBlockHash = this.lastBlockHashFromBefore;
+		Main2.lastTranHash = this.lastTranHashFromBefore;
 		LinkedHashSet<AddressT> finalAddresses = this.addrSet.getAddrSet();
 		for(AddressT ad : finalAddresses){
 			this.addStr.append(ad);
@@ -258,6 +291,7 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 		}
 		this.wallet.write(this.wallStr.toString());
 		this.wallet.close();
-		System.out.println("Last Hash: " + this.lastHashFromBefore);
+		System.out.println("Last Tran Hash: " + this.lastTranHashFromBefore);
+		System.out.println("Last Block Hash: " + this.lastBlockHashFromBefore);
 	}
 }

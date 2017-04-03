@@ -17,8 +17,8 @@ public class ParserToCSVDateModel2 extends ParserToCSVModel2 implements BitCoinE
 	private Map<String, Double> timeExchangeRate = new HashMap<String, Double>();
 
 	
-	public ParserToCSVDateModel2(int numBlock, boolean begin, String lastSecond, int folderCounter) throws FileNotFoundException {
-		super(numBlock, begin, lastSecond, folderCounter);
+	public ParserToCSVDateModel2(int numBlock, boolean begin, String lastBlock, String lastTran, int folderCounter) throws FileNotFoundException {
+		super(numBlock, begin, lastBlock, lastTran, folderCounter);
 	}
 	
 	protected double getDollarValDayorHour(String time, String value) throws JSONException, IOException{
