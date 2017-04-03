@@ -4,7 +4,7 @@ import java.util.Objects;
 
 
 /**
- * a class for bitcoin address possibly including the  
+ * a class for bitcoin address, possibly including the  
  * values of addr_tag_link and addr_tag found on blockchain.info
  * @author yshi
  *
@@ -37,7 +37,7 @@ public class Address{
 	 * overrides hashCode() in Object
 	 */
 	public int hashCode() {
-		return 0;	
+		return this.address.hashCode();	
 	}
 	
 	/**
@@ -53,8 +53,10 @@ public class Address{
 	
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
+	 * 
+	 * addrID,addr_tag_link,addr_tag
 	 */
 	public String toString(){
-		return this.address +  "," + this.addrTagLink + ","+ this.addrTag;
+		return this.address +  ',' + this.addrTagLink + ',' + this.addrTag;
 	}
 }
