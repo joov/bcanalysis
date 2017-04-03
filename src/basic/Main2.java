@@ -10,13 +10,14 @@ import org.json.JSONException;
  *
  */
 public class Main2 {
+	
+	//to be change to the output of the String in the output after "Last Hash: " in the last parse
 	public static String lastBlockHash = "0000000000000000012f0d787bfcf78b78d6ea83fbe9354844717281e5ba485a"; //
+	
 	public static void main(String[] args) throws JSONException, IOException{
 //		ParserToCSVHourModel2 p = new ParserToCSVHourModel2(30, true, null, 1);
 //		p.parse();
 		
-		//after getting rid of all "System.exit" and filling in Main2.lastBlockHash
-		// not to be used when this is the first parse
 		int counter = 9;
 		while(true){
 			ParserToCSVHourModel2 p = new ParserToCSVHourModel2(30, false, Main2.lastBlockHash, counter);
