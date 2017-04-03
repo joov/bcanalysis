@@ -13,7 +13,7 @@ import org.json.JSONException;
  *
  */
 public interface BitCoinExRateGetterDay {
-	static final double satToBit = 0.00000001;
+	static final double SATTOBIT = 0.00000001;
 
 	// time is always in the format of "2014-03-11T08:27:57+0000"
 	double getDollarValDay(String time, String value) throws IOException, JSONException;
