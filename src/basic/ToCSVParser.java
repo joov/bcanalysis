@@ -31,7 +31,7 @@ public abstract class ToCSVParser {
 
 	protected ArrayList<String> blocklists = new ArrayList<String>();
 	protected AddressSet addrSet = new AddressSet();
-	protected HashSet<AddressJSON> addrJSet = new HashSet<AddressJSON>();
+	protected static HashSet<AddressJSON> addrJSet = new HashSet<AddressJSON>();
 	protected ArrayList<Transaction> tranSet = new ArrayList<Transaction>();
 	protected ArrayList<Wallet> wallSet = new ArrayList<Wallet>();
 
@@ -107,9 +107,7 @@ public abstract class ToCSVParser {
 		System.setProperty("http.agent", "Chrome");
 		InputStream is = null;
 		try{
-			if(url.startsWith("https://winkdex.com/api/")){
-				System.out.println(url);				
-			}
+			System.out.println(url);
 			is = new URL(url).openStream();			
 		}catch(Exception e){
 			this.end();
@@ -207,7 +205,7 @@ public abstract class ToCSVParser {
 	 * @return
 	 */
 	protected AddressJSON getAddrJSON(String address){
-		for(AddressJSON aj : this.addrJSet){
+		for(AddressJSON aj : ToCSVParser.addrJSet){
 			if(aj.getAddr().equals(address)){
 				return aj;
 			}
@@ -217,7 +215,7 @@ public abstract class ToCSVParser {
 		try{
 			JSONObject addrObj = this.readJsonFromUrl("https://api.blocktrail.com/v1/btc/address/" + address +"?api_key="+ Util.apiKey);
 			aJ = new AddressJSON(addrObj);
-			this.addrJSet.add(aJ);
+			ToCSVParser.addrJSet.add(aJ);
 		}catch(IOException se){
 			this.end();
 			System.out.println("finish exception when getting address time!");
