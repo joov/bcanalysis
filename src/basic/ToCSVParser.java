@@ -216,7 +216,7 @@ public abstract class ToCSVParser {
 			JSONObject addrObj = this.readJsonFromUrl("https://api.blocktrail.com/v1/btc/address/" + address +"?api_key="+ Util.apiKey);
 			aJ = new AddressJSON(addrObj);
 			ToCSVParser.addrJSet.add(aJ);
-		}catch(IOException se){
+		}catch(Exception se){
 			this.end();
 			System.out.println("finish exception when getting address time!");
 //			System.exit(1);;

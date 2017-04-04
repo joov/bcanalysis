@@ -77,7 +77,7 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 					tranFromBC.put(ta.get("hash"), ta);
 				}
 				System.out.println("JSON obtained!");
-			}catch(java.net.SocketException se){
+			}catch(Exception se){
 				this.end();
 				System.out.println("finish exception!");
 				se.printStackTrace();
@@ -173,9 +173,23 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 					//System.out.println(taTime);
 					//output addr:ID(ReceAdd),tranHashString,value,type,addr_tag_link,addr_tag
 					JSONArray outps = ta.getJSONArray("outputs");
-
+//					boolean startAddrP = true;
+//					if(taHash.equals("a5986c1efafc3ea7defd7e4c540dca27ba73ad5d7fc374d033bf28525f87b7ff")){
+//						System.out.println("False");
+//						startAddrP = false;
+//					}
 					for(int j = 0; j < outps.length(); j ++){
 						JSONObject outp = outps.getJSONObject(j);
+//						while(!startAddrP){
+//							if(outp.getString("address").equals("1FwDDVVN4xXbfVUfhKGafVYThetHGadZay")){
+//								startAddrP = true;
+//								j++;
+//								outp = outps.getJSONObject(j);
+//							}else{
+//								j++;
+//								outp = outps.getJSONObject(j);
+//							}
+//						}							
 						if(!outp.get("type").equals("op_return")){
 							if(outp.get("type").equals("multisig")){
 								ArrayList<AddressT> multiSigAdd = new ArrayList<AddressT>();
@@ -221,6 +235,7 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 								}
 								
 							}else if(outp.has("address") && outp.get("address") != null && outp.getLong("value") != 0){
+								
 								String outAddr = outp.getString("address");
 								boolean includedInSenderWallet = false;
 								String estChanAddr = ta.get("estimated_change_address").toString();
