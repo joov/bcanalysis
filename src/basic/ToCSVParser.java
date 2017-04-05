@@ -27,11 +27,11 @@ import org.json.JSONObject;
  */
 public abstract class ToCSVParser {
 	protected int folderCounter;
-	protected String lastHashFromBefore;
+	protected String lastBlockHashFromBefore;
 
 	protected ArrayList<String> blocklists = new ArrayList<String>();
 	protected AddressSet addrSet = new AddressSet();
-	protected HashSet<AddressJSON> addrJSet = new HashSet<AddressJSON>();
+	protected static HashSet<AddressJSON> addrJSet = new HashSet<AddressJSON>();
 	protected ArrayList<Transaction> tranSet = new ArrayList<Transaction>();
 	protected ArrayList<Wallet> wallSet = new ArrayList<Wallet>();
 
@@ -43,7 +43,7 @@ public abstract class ToCSVParser {
 	 */
 	public ToCSVParser(int numBlock, boolean begin, String lastHashFromBefore, int folderCounter){
 		this.folderCounter = folderCounter;
-		this.lastHashFromBefore = lastHashFromBefore;
+		this.lastBlockHashFromBefore = lastHashFromBefore;
 		int counter = 0;
 		boolean readBl = begin;
 
@@ -52,7 +52,7 @@ public abstract class ToCSVParser {
 			String line;
 			while ((line = reader.readLine()) != null && counter < numBlock) {
 				if(!line.endsWith(".dat") ){
-					if (line.equals(this.lastHashFromBefore)) {  
+					if (line.equals(this.lastBlockHashFromBefore)) {  
 						readBl = true;
 						continue;
 					}
@@ -107,9 +107,7 @@ public abstract class ToCSVParser {
 		System.setProperty("http.agent", "Chrome");
 		InputStream is = null;
 		try{
-			if(url.startsWith("https://winkdex.com/api/")){
-				System.out.println(url);				
-			}
+			System.out.println(url);
 			is = new URL(url).openStream();			
 		}catch(Exception e){
 			this.end();
@@ -195,7 +193,7 @@ public abstract class ToCSVParser {
 	}
 	
 	protected String getLastHash(){
-		return this.lastHashFromBefore;
+		return this.lastBlockHashFromBefore;
 	}
 	
 	/**
@@ -207,7 +205,7 @@ public abstract class ToCSVParser {
 	 * @return
 	 */
 	protected AddressJSON getAddrJSON(String address){
-		for(AddressJSON aj : this.addrJSet){
+		for(AddressJSON aj : ToCSVParser.addrJSet){
 			if(aj.getAddr().equals(address)){
 				return aj;
 			}
@@ -217,8 +215,8 @@ public abstract class ToCSVParser {
 		try{
 			JSONObject addrObj = this.readJsonFromUrl("https://api.blocktrail.com/v1/btc/address/" + address +"?api_key="+ Util.apiKey);
 			aJ = new AddressJSON(addrObj);
-			this.addrJSet.add(aJ);
-		}catch(IOException se){
+			ToCSVParser.addrJSet.add(aJ);
+		}catch(Exception se){
 			this.end();
 			System.out.println("finish exception when getting address time!");
 //			System.exit(1);;
