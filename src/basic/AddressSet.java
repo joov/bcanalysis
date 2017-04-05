@@ -2,6 +2,7 @@ package basic;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 
 import org.json.JSONObject;
 
@@ -33,6 +34,16 @@ public class AddressSet{
 		    lastElement=itr.next();
 		}		 	
 		return lastElement;
+	 }
+	 
+	 public AddressT getLastAddedWithWallet(){
+		 LinkedList<AddressT> list = new LinkedList<AddressT>(this.addrSet);
+		 Iterator<AddressT> itr = list.descendingIterator();
+		 AddressT result = itr.next();
+		 while(result.getAddr() == null) {
+			 result=itr.next();
+		 }
+		return result;
 	 }
 	 
 	 public void addAddrAccJSON(String address, JSONObject item, AddressJSON addrObj, ToCSVParser p){

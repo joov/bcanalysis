@@ -36,8 +36,8 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 	public ParserToCSVModel2(int numBlock, boolean begin, String lastBlockHashFromBefore, 
 			String lastTranHashFromBefore, String currentParsingTranHash, String lastAddrFromBefore, int folderCounter) throws FileNotFoundException {
 		super(numBlock, begin, lastBlockHashFromBefore, lastAddrFromBefore, folderCounter);
+		this.lastTranHashFromBefore = lastTranHashFromBefore;
 		this.currentParsingTranHash = currentParsingTranHash;
-		this.lastAddrFromBefore = lastAddrFromBefore;
 		// define files to be written into
 		String folderPath = Util.path + this.folderCounter;
 		File baseDir = new File(System.getProperty("user.home") + folderPath );
@@ -318,6 +318,7 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 		Main3.lastBlockHash = this.lastBlockHashFromBefore;
 		Main3.lastTranHash = this.lastTranHashFromBefore;
 		Main3.currTranHash = this.currentParsingTranHash;
+		this.lastAddrFromBefore = this.addrSet.getLastAddedWithWallet().getAddr();
 		Main3.lastAddr = this.lastAddrFromBefore;
 		LinkedHashSet<AddressT> finalAddresses = this.addrSet.getAddrSet();
 		for(AddressT ad : finalAddresses){
