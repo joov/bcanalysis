@@ -13,12 +13,15 @@ import java.util.ArrayList;
 import java.util.HashSet;
 //import java.util.List;
 
+import org.apache.log4j.Logger;
 //import org.bitcoinj.core.NetworkParameters;
 //import org.bitcoinj.params.MainNetParams;
 //import org.bitcoinj.utils.BlockFileLoader;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import jline.internal.Log;
 
 /**
  * abstract class for all parser classes
@@ -35,7 +38,7 @@ public abstract class ToCSVParser {
 	protected ArrayList<Transaction> tranSet = new ArrayList<Transaction>();
 	protected ArrayList<Wallet> wallSet = new ArrayList<Wallet>();
 
-
+	static final Logger LOG = Logger.getLogger(ToCSVParser.class) ;
 	
 	/**
 	 * Constructor
@@ -46,6 +49,8 @@ public abstract class ToCSVParser {
 		this.lastBlockHashFromBefore = lastHashFromBefore;
 		int counter = 0;
 		boolean readBl = begin;
+		
+
 
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader("blockhash.txt"));
@@ -64,8 +69,7 @@ public abstract class ToCSVParser {
 			}
 			reader.close();
 		} catch (Exception e) {
-			System.err.format("reading exception");
-			e.printStackTrace();
+			LOG.error("reading exception\n"+ e);
 		}
 	}
 	
@@ -111,8 +115,7 @@ public abstract class ToCSVParser {
 			is = new URL(url).openStream();			
 		}catch(Exception e){
 			this.end();
-			System.out.println("finish exception (some transaction not fully parsed)!");
-			e.printStackTrace();
+			LOG.error("finish exception (some transaction not fully parsed)!",e);
 //			System.exit(1);	
 		}
 		try {
@@ -218,7 +221,7 @@ public abstract class ToCSVParser {
 			ToCSVParser.addrJSet.add(aJ);
 		}catch(Exception se){
 			this.end();
-			System.out.println("finish exception when getting address time!");
+			LOG.info("finish exception when getting address time!");
 //			System.exit(1);;
 		}
 		return aJ;

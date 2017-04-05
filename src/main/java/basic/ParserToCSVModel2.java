@@ -10,6 +10,8 @@ import java.util.LinkedHashSet;
 //import org.bitcoinj.core.*;
 import org.json.*;
 
+import jline.internal.Log;
+
 
 /**
  * This class will extract data regarding bitcoin transaction
@@ -37,7 +39,8 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 		this.lastTranHashFromBefore = lastTranHashFromBefore;
 		// define files to be written into
 		String folderPath = Util.path + this.folderCounter;
-		File baseDir = new File(System.getProperty("user.home") + folderPath );
+
+		File baseDir = new File(Main2.getProperties().getProperty("data.dir",System.getProperty("user.home") + folderPath));
 		if(!baseDir.exists()){
 			baseDir.mkdirs();
 		}
@@ -283,8 +286,9 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 	}
 	
 	protected void end(){	
-		Main2.lastBlockHash = this.lastBlockHashFromBefore;
-		Main2.lastTranHash = this.lastTranHashFromBefore;
+// TODO YSHI: This is an anti-pattern!
+//		Main2.lastBlockHash = this.lastBlockHashFromBefore;
+//		Main2.lastTranHash = this.lastTranHashFromBefore;
 		LinkedHashSet<AddressT> finalAddresses = this.addrSet.getAddrSet();
 		for(AddressT ad : finalAddresses){
 			this.addStr.append(ad);
@@ -306,7 +310,7 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 		}
 		this.wallet.write(this.wallStr.toString());
 		this.wallet.close();
-		System.out.println("Last Tran Hash: " + this.lastTranHashFromBefore);
-		System.out.println("Last Block Hash: " + this.lastBlockHashFromBefore);
+		Log.info("Last Tran Hash: " + this.lastTranHashFromBefore);
+		Log.info("Last Block Hash: " + this.lastBlockHashFromBefore);
 	}
 }

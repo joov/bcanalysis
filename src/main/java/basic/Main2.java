@@ -1,6 +1,11 @@
 package basic;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
+import org.apache.log4j.Logger;
 import org.json.JSONException;
 
 /**
@@ -11,18 +16,39 @@ import org.json.JSONException;
  */
 public class Main2 {
 	
-	//to be change to the output of the String in the output after "Last Hash: " in the last parse
-	public static String lastBlockHash = "000000000000000008016b21be06e89206d2aa9d2849606f2ce07129a1bde0a5"; //
-	public static String lastTranHash = "20c8598e3597bd51d325b4f69d3673fc336ebb838fd77fe9050179f2cd27fda1"; //
+	
+	private static Properties properties = new Properties() ;
+	
+	/**
+	 * Get main properties.
+	 * @return properties
+	 */
+	public static Properties getProperties() {
+		return properties ;
+	}
 	
 	public static void main(String[] args) throws JSONException, IOException{
 //		ParserToCSVHourModel2 p = new ParserToCSVHourModel2(30, true, null, 1);
 //		p.parse();
 		
-		int counter = 16; //also sometimes need to be changed
+		// Set Logger
+		Logger LOG = Logger.getLogger(Main2.class) ;
+		
+		// Load Properties
+		String fileName = System.getProperty("properties.file", "bcanalyis.properties") ;
+		LOG.debug("Reading properties from " + fileName);
+		
+		InputStream is = new FileInputStream(fileName);
+		properties.load(is);
+		is.close();
+		
+		String lastBlockHash = getProperties().getProperty("last.block", "000000000000000008016b21be06e89206d2aa9d2849606f2ce07129a1bde0a5") ;
+		String lastTranHash = getProperties().getProperty("last.trans", "20c8598e3597bd51d325b4f69d3673fc336ebb838fd77fe9050179f2cd27fda1") ;
+		
+		int counter = Integer.parseInt(getProperties().getProperty("main.counter", "16")); //also sometimes need to be changed
 		while(true){
-			System.out.println(counter);
-			ParserToCSVHourModel2 p = new ParserToCSVHourModel2(30, false, Main2.lastBlockHash, Main2.lastTranHash, counter);
+			LOG.debug("Counter: " + counter);
+			ParserToCSVHourModel2 p = new ParserToCSVHourModel2(30, false, lastBlockHash, lastTranHash, counter);
 			counter++;
 			try{
 				p.parse();				

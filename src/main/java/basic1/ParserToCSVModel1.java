@@ -10,6 +10,7 @@ import org.json.*;
 
 import basic.Util;
 import basic.AddressOT;
+import basic.Main2;
 
 
 /**
@@ -37,27 +38,27 @@ public abstract class ParserToCSVModel1 extends ToCSVParser{
 	public ParserToCSVModel1(ArrayList<String> datFileNames) throws FileNotFoundException {
 		super(datFileNames);
 		// define files to be written into
-		File baseDir = new File(System.getProperty("user.home") + "/csvs");
+		File baseDir = new File(Main2.getProperties().getProperty("data.dir",System.getProperty("user.home") + "/csvs"));
 		if(!baseDir.exists()){
 			baseDir.mkdirs();
 		}
-		this.addresses = new PrintWriter(new File(System.getProperty("user.home") + "/csvs/addresses.csv"));
+		this.addresses = new PrintWriter(new File(baseDir + "/addresses.csv"));
 		this.addStr = new StringBuilder();
 		this.addStr.append("address:ID(Addr),addr_tag_link,addr_tag,time\n");
-		this.transactions = new PrintWriter(new File(System.getProperty("user.home") + "/csvs/transactions.csv"));
+		this.transactions = new PrintWriter(new File(baseDir + "/transactions.csv"));
 		this.traStr = new StringBuilder();
 		this.traStr.append("tranHashString:ID(Trans),time\n");
-		this.inputs = new PrintWriter(new File(System.getProperty("user.home") + "/csvs/inputs.csv"));
+		this.inputs = new PrintWriter(new File(baseDir + "/inputs.csv"));
 		this.inputStr = new StringBuilder();
 		this.inputStr.append("addr:ID(SendAdd),tranHashString,value_bitcoin,value_dollar,type\n");
-		this.outputs = new PrintWriter(new File(System.getProperty("user.home") + "/csvs/outputs.csv"));
+		this.outputs = new PrintWriter(new File(baseDir + "/outputs.csv"));
 		this.outputStr = new StringBuilder();
 		this.outputStr.append("addr:ID(ReceAdd),tranHashString,value_bitcoin,value_dollar,type\n");
 
-		inTran = new PrintWriter(new File(System.getProperty("user.home") + "/csvs/intran.csv"));
+		inTran = new PrintWriter(new File(baseDir + "/intran.csv"));
 		inStr = new StringBuilder();
 		inStr.append(":START_ID(SendAdd),:END_ID(Trans)\n");
-		outTran = new PrintWriter(new File(System.getProperty("user.home") + "/csvs/outtran.csv"));
+		outTran = new PrintWriter(new File(baseDir + "/outtran.csv"));
 		outStr = new StringBuilder();
 		outStr.append(":START_ID(Trans),:END_ID(ReceAdd)\n");
 	}	
