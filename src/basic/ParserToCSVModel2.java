@@ -30,11 +30,14 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 	private PrintWriter wallet;
 	private StringBuilder wallStr = new StringBuilder();
 	
-	private String lastTranHashFromBefore;
+	private String lastTranHashFromBefore;   // the hash of the transaction which has been finished parsing
+	private String currentParsingTranHash;  // the hash of the transaction is currently been parsed, could be from before
 	
-	public ParserToCSVModel2(int numBlock, boolean begin, String lastBlockHashFromBefore, String lastTranHashFromBefore, int folderCounter) throws FileNotFoundException {
-		super(numBlock, begin, lastBlockHashFromBefore, folderCounter);
-		this.lastTranHashFromBefore = lastTranHashFromBefore;
+	public ParserToCSVModel2(int numBlock, boolean begin, String lastBlockHashFromBefore, 
+			String lastTranHashFromBefore, String currentParsingTranHash, String lastAddrFromBefore, int folderCounter) throws FileNotFoundException {
+		super(numBlock, begin, lastBlockHashFromBefore, lastAddrFromBefore, folderCounter);
+		this.currentParsingTranHash = currentParsingTranHash;
+		this.lastAddrFromBefore = lastAddrFromBefore;
 		// define files to be written into
 		String folderPath = Util.path + this.folderCounter;
 		File baseDir = new File(System.getProperty("user.home") + folderPath );
@@ -60,10 +63,13 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 	 * @see basic.ToCSVParser#parse()
 	 */
 	public void parse() throws JSONException, IOException{
-		boolean justStarted = true;
+		boolean justStarted1 = true;
+		boolean justStarted2 = true;
 
+		boolean startAddrP = Util.equalsWithNulls(this.lastTranHashFromBefore, this.currentParsingTranHash);
+		
 		// Iterate over the blocks in the dataset.
-		for (String block : this.blocklists) {
+		blockLoop: for (String block : this.blocklists) {
 			System.out.println(block);
 			JSONObject blockJson = null;
 			JSONObject blockAltJson = null;
@@ -86,17 +92,24 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 			//System.out.println(blockJson);
 			
 			JSONArray tas = blockJson.getJSONArray("data");
-			for(int i = 0; i < tas.length(); i ++){
+			transactionLoop: for(int i = 0; i < tas.length(); i ++){
 				JSONObject ta = tas.getJSONObject(i);
-				if(justStarted){
-					justStarted = false;
+				if(justStarted1){
+					justStarted1 = false;
 					if(this.lastTranHashFromBefore != null){	
 						while(i < tas.length()){
 							ta = tas.getJSONObject(i);
 							if(ta.getString("hash").equals(this.lastTranHashFromBefore)){
 								i++;
-								ta = tas.getJSONObject(i);
-								break;
+								if(i < tas.length()){
+									ta = tas.getJSONObject(i);
+									break;									
+								}else{
+									justStarted2 = false;
+									this.lastTranHashFromBefore = ta.getString("hash");
+									continue blockLoop;
+								}
+
 							}else{
 								i++;
 								continue;
@@ -115,6 +128,7 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 				
 				if(!ta.get("is_coinbase").toString().equals("true")){
 					String taHash = ta.getString("hash");
+					this.currentParsingTranHash = taHash;
 					//input addr:ID(SendAdd),tranHashString,value,type,addr_tag_link,addr_tag
 					JSONArray inps = ta.getJSONArray("inputs");
 					ArrayList<AddressT> inputAddrsTa = new ArrayList<AddressT>();
@@ -129,15 +143,15 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 										AddressJSON addrJ = this.getAddrJSON(multiAdd.get(k).toString());
 										addrToAdd = new AddressT(multiAdd.get(k).toString(), null, null, addrJ, null, true);	
 									}
-									if(!this.addrSet.add(addrToAdd)){
+									if(!this.addrSet.add(addrToAdd, this)){
 										if(!addrToAdd.getMulti()){
 											this.addrSet.remove(addrToAdd);
 											addrToAdd.setMultiTrue();
-											this.addrSet.add(addrToAdd);
+											this.addrSet.add(addrToAdd, this);
 										}
 									}
 									inputAddrsTa.add(addrToAdd);
-									this.addrSet.add(addrToAdd);
+									this.addrSet.add(addrToAdd, this);
 								}								
 							}else if(inp.has("address") && inp.get("address") != null && inp.getLong("value") != 0){
 								// for addresses which might have addr_tag_link,addr_tag
@@ -173,23 +187,41 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 					//System.out.println(taTime);
 					//output addr:ID(ReceAdd),tranHashString,value,type,addr_tag_link,addr_tag
 					JSONArray outps = ta.getJSONArray("outputs");
-//					boolean startAddrP = true;
-//					if(taHash.equals("a5986c1efafc3ea7defd7e4c540dca27ba73ad5d7fc374d033bf28525f87b7ff")){
-//						System.out.println("False");
-//						startAddrP = false;
-//					}
+
 					for(int j = 0; j < outps.length(); j ++){
 						JSONObject outp = outps.getJSONObject(j);
-//						while(!startAddrP){
-//							if(outp.getString("address").equals("1FwDDVVN4xXbfVUfhKGafVYThetHGadZay")){
-//								startAddrP = true;
-//								j++;
-//								outp = outps.getJSONObject(j);
-//							}else{
-//								j++;
-//								outp = outps.getJSONObject(j);
-//							}
-//						}							
+						
+						if(justStarted2){
+							justStarted2 = false;
+							if(!startAddrP){
+								while(j < outps.length()){
+									outp = outps.getJSONObject(j);
+									if(outp.getString("address").equals(this.lastAddrFromBefore)){
+										startAddrP = true;
+										j++;
+										if(j < outps.length()){
+											outp = outps.getJSONObject(j);
+											break;								
+										}else{
+											this.lastAddrFromBefore = outp.getString("address");
+											continue transactionLoop;
+										}
+
+									}else{
+										j++;
+										continue;
+									}
+								}	
+								if(j == outps.length()){  //no address from outputs of the current ta has been parsed
+									startAddrP = true;
+									j = 0;
+									outp = outps.getJSONObject(j);
+								}							
+							}else{
+								outp = outps.getJSONObject(j);
+							}
+						}
+
 						if(!outp.get("type").equals("op_return")){
 							if(outp.get("type").equals("multisig")){
 								ArrayList<AddressT> multiSigAdd = new ArrayList<AddressT>();
@@ -200,15 +232,15 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 										AddressJSON addrJ = this.getAddrJSON(multiAdd.get(k).toString());
 										addrToAdd = new AddressT(multiAdd.get(k).toString(), null, null, addrJ, null, true);	
 									}
-									if(!this.addrSet.add(addrToAdd)){
+									if(!this.addrSet.add(addrToAdd, this)){
 										if(!addrToAdd.getMulti()){
 											this.addrSet.remove(addrToAdd);
 											addrToAdd.setMultiTrue();
-											this.addrSet.add(addrToAdd);
+											this.addrSet.add(addrToAdd, this);
 										}
 									}
 									multiSigAdd.add(addrToAdd);
-									this.addrSet.add(addrToAdd);
+									this.addrSet.add(addrToAdd, this);
 								}
 								boolean includedInSenderWallet = false;
 								String estChanAddr = ta.get("estimated_change_address").toString();
@@ -283,8 +315,10 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 	}
 	
 	protected void end(){	
-		Main2.lastBlockHash = this.lastBlockHashFromBefore;
-		Main2.lastTranHash = this.lastTranHashFromBefore;
+		Main3.lastBlockHash = this.lastBlockHashFromBefore;
+		Main3.lastTranHash = this.lastTranHashFromBefore;
+		Main3.currTranHash = this.currentParsingTranHash;
+		Main3.lastAddr = this.lastAddrFromBefore;
 		LinkedHashSet<AddressT> finalAddresses = this.addrSet.getAddrSet();
 		for(AddressT ad : finalAddresses){
 			this.addStr.append(ad);
@@ -308,5 +342,8 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 		this.wallet.close();
 		System.out.println("Last Tran Hash: " + this.lastTranHashFromBefore);
 		System.out.println("Last Block Hash: " + this.lastBlockHashFromBefore);
+		System.out.println("Current Tran Hash: " + this.currentParsingTranHash);
+		System.out.println("Last Address: " + this.lastAddrFromBefore);
 	}
+
 }
