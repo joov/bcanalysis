@@ -13,15 +13,12 @@ import java.util.ArrayList;
 import java.util.HashSet;
 //import java.util.List;
 
-import org.apache.log4j.Logger;
 //import org.bitcoinj.core.NetworkParameters;
 //import org.bitcoinj.params.MainNetParams;
 //import org.bitcoinj.utils.BlockFileLoader;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import jline.internal.Log;
 
 /**
  * abstract class for all parser classes
@@ -31,26 +28,27 @@ import jline.internal.Log;
 public abstract class ToCSVParser {
 	protected int folderCounter;
 	protected String lastBlockHashFromBefore;
+	public String lastAddrFromBefore;
 
+	
 	protected ArrayList<String> blocklists = new ArrayList<String>();
 	protected AddressSet addrSet = new AddressSet();
 	protected static HashSet<AddressJSON> addrJSet = new HashSet<AddressJSON>();
 	protected ArrayList<Transaction> tranSet = new ArrayList<Transaction>();
 	protected ArrayList<Wallet> wallSet = new ArrayList<Wallet>();
 
-	static final Logger LOG = Logger.getLogger(ToCSVParser.class) ;
+
 	
 	/**
 	 * Constructor
 	 * @param datFileNames the array of dat file name in form of .dat
 	 */
-	public ToCSVParser(int numBlock, boolean begin, String lastHashFromBefore, int folderCounter){
+	public ToCSVParser(int numBlock, boolean begin, String lastHashFromBefore, String addrFromBefore, int folderCounter){
 		this.folderCounter = folderCounter;
 		this.lastBlockHashFromBefore = lastHashFromBefore;
+		this.lastAddrFromBefore = addrFromBefore;
 		int counter = 0;
 		boolean readBl = begin;
-		
-
 
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader("blockhash.txt"));
@@ -69,7 +67,8 @@ public abstract class ToCSVParser {
 			}
 			reader.close();
 		} catch (Exception e) {
-			LOG.error("reading exception\n"+ e);
+			System.err.format("reading exception");
+			e.printStackTrace();
 		}
 	}
 	
@@ -115,7 +114,8 @@ public abstract class ToCSVParser {
 			is = new URL(url).openStream();			
 		}catch(Exception e){
 			this.end();
-			LOG.error("finish exception (some transaction not fully parsed)!",e);
+			System.out.println("finish exception (some transaction not fully parsed)!");
+			e.printStackTrace();
 //			System.exit(1);	
 		}
 		try {
@@ -192,7 +192,7 @@ public abstract class ToCSVParser {
 		}
 		
 		AddressJSON addrObj = this.getAddrJSON(address);
-		this.addrSet.addAddrAccJSON(address, item, addrObj);
+		this.addrSet.addAddrAccJSON(address, item, addrObj, this);
 	}
 	
 	protected String getLastHash(){
@@ -221,7 +221,9 @@ public abstract class ToCSVParser {
 			ToCSVParser.addrJSet.add(aJ);
 		}catch(Exception se){
 			this.end();
-			LOG.info("finish exception when getting address time!");
+			System.out.println("finish exception when getting address time!");
+			se.printStackTrace();
+
 //			System.exit(1);;
 		}
 		return aJ;
@@ -256,5 +258,8 @@ public abstract class ToCSVParser {
 	}
 	protected void removeFromWallList(Wallet toRe){
 		this.wallSet.remove(toRe);
+	}
+	public void setLastAddrBef(String addr){
+		this.lastAddrFromBefore = addr;
 	}
 }
