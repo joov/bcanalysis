@@ -37,9 +37,14 @@ public class Main2 {
 		LOG.debug("Reading properties from " + fileName);
 		
 		InputStream is =  new FileInputStream(fileName);
-		properties.load(is);
-		is.close();
-		
+		if (is != null) {
+			LOG.debug("Properties file found");
+			properties.load(is);
+			is.close();
+		}
+		else {
+			LOG.debug("No properties file found. Continuing with defaults");
+		}
 		String lastBlockHash = getProperties().getProperty("last.block", "0000000000000000061338c784fa43a7fce7d3fe671e4d79e06fb8de704da30f") ;
 		String lastTranHash = getProperties().getProperty("last.trans", "20c8598e3597bd51d325b4f69d3673fc336ebb838fd77fe9050179f2cd27fda1") ;
 		String currTranHash = getProperties().getProperty("curr.trans", "11474b5c73ed018bb09cc8647e12212eec1e0bd32b45fa444dfc479b68c2cc0f") ;
