@@ -40,7 +40,7 @@ public class AddressSet{
 		 LinkedList<AddressT> list = new LinkedList<AddressT>(this.addrSet);
 		 Iterator<AddressT> itr = list.descendingIterator();
 		 AddressT result = itr.next();
-		 while(result.getAddr() == null) {
+		 while(result != null && result.getAddr() == null) {
 			 result=itr.next();
 		 }
 		return result;
