@@ -28,7 +28,9 @@ import org.json.JSONObject;
 public abstract class ToCSVParser {
 	protected int folderCounter;
 	protected String lastBlockHashFromBefore;
+	public String lastAddrFromBefore;
 
+	
 	protected ArrayList<String> blocklists = new ArrayList<String>();
 	protected AddressSet addrSet = new AddressSet();
 	protected static HashSet<AddressJSON> addrJSet = new HashSet<AddressJSON>();
@@ -41,9 +43,10 @@ public abstract class ToCSVParser {
 	 * Constructor
 	 * @param datFileNames the array of dat file name in form of .dat
 	 */
-	public ToCSVParser(int numBlock, boolean begin, String lastHashFromBefore, int folderCounter){
+	public ToCSVParser(int numBlock, boolean begin, String lastHashFromBefore, String addrFromBefore, int folderCounter){
 		this.folderCounter = folderCounter;
 		this.lastBlockHashFromBefore = lastHashFromBefore;
+		this.lastAddrFromBefore = addrFromBefore;
 		int counter = 0;
 		boolean readBl = begin;
 
@@ -189,7 +192,7 @@ public abstract class ToCSVParser {
 		}
 		
 		AddressJSON addrObj = this.getAddrJSON(address);
-		this.addrSet.addAddrAccJSON(address, item, addrObj);
+		this.addrSet.addAddrAccJSON(address, item, addrObj, this);
 	}
 	
 	protected String getLastHash(){
@@ -219,6 +222,8 @@ public abstract class ToCSVParser {
 		}catch(Exception se){
 			this.end();
 			System.out.println("finish exception when getting address time!");
+			se.printStackTrace();
+
 //			System.exit(1);;
 		}
 		return aJ;
@@ -253,5 +258,8 @@ public abstract class ToCSVParser {
 	}
 	protected void removeFromWallList(Wallet toRe){
 		this.wallSet.remove(toRe);
+	}
+	public void setLastAddrBef(String addr){
+		this.lastAddrFromBefore = addr;
 	}
 }
