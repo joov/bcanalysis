@@ -5,5 +5,8 @@ RUN apt-add-repository ppa:bitcoin/bitcoin \
     && apt-get update \
 	&& apt-get install bitcoind
 	
+EXPOSE 8332	
 	
-CMD [ "/bin/bash" ]
+ENTRYPOINT [ "/usr/bin/bitcoind" ]
+
+CMD [ "-daemon" ]
