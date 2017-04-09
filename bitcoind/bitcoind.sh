@@ -1,0 +1,1 @@
+bitcoind -daemon -datadir=/bitcoin

@@ -1,9 +1,12 @@
 FROM armv7/armhf-ubuntu
 MAINTAINER Johannes Wenzel
 
-RUN apt-add-repository ppa:bitcoin/bitcoin \
+RUN apt-get update \
+    && apt-get install -y python-software-properties \
+    && apt-get install -y software-properties-common \
+    && apt-add-repository ppa:bitcoin/bitcoin \
     && apt-get update \
-	&& apt-get install bitcoind
+	&& apt-get install -y bitcoind
 	
 EXPOSE 8332	
 	
