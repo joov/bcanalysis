@@ -39,20 +39,20 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 		this.lastTranHashFromBefore = lastTranHashFromBefore;
 		this.currentParsingTranHash = currentParsingTranHash;
 		// define files to be written into
-		String folderPath = Util.path + this.folderCounter;
-		File baseDir = new File(System.getProperty("user.home") + folderPath );
+		String folderPath = Util.getPath() +"/"+ this.folderCounter;
+		File baseDir = new File(folderPath );
 		if(!baseDir.exists()){
 			baseDir.mkdirs();
 		}
-		this.addresses = new PrintWriter(new File(System.getProperty("user.home") + folderPath + "/addresses.csv"));
+		this.addresses = new PrintWriter(new File(folderPath + "/addresses.csv"));
 		this.addStr = new StringBuilder();
 		this.addStr.append("addrID,addr_tag_links,addr_tags,firstSeen,lastSeen,primWallAdd,multiExist\n");  
 
-		this.wallet = new PrintWriter(new File(System.getProperty("user.home") + folderPath + "/wallet.csv"));
+		this.wallet = new PrintWriter(new File(folderPath + "/wallet.csv"));
 		this.wallStr = new StringBuilder();
 		this.wallStr.append("primAddress,firstSeenTime,lastSeenTime,numAddress\n");
 		
-		this.transactions = new PrintWriter(new File(System.getProperty("user.home") + folderPath + "/transactionRelation.csv"));
+		this.transactions = new PrintWriter(new File(folderPath + "/transactionRelation.csv"));
 		this.tranStr = new StringBuilder();
 		this.tranStr.append("sendWallet,receWallet,tranHashString,time,value_bitcoin,value_dollar,type,estChanAddr\n");
 	}
@@ -75,7 +75,7 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 			JSONObject blockAltJson = null;
 			Map<Object, JSONObject> tranFromBC = new HashMap<Object, JSONObject>(); //transaction information from blockchain.info
 			try{
-				blockJson = readJsonFromUrl("https://api.blocktrail.com/v1/btc/block/" + block + "/transactions?api_key=" + Util.apiKey);
+				blockJson = readJsonFromUrl("https://api.blocktrail.com/v1/btc/block/" + block + "/transactions?api_key=" + Util.getApiKey());
 				blockAltJson = readJsonFromUrl("https://blockchain.info/rawblock/" + block);
 				JSONArray transAlt = blockAltJson.getJSONArray("tx");
 				for(int i = 0; i < transAlt.length(); i ++){

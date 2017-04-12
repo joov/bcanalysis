@@ -216,7 +216,7 @@ public abstract class ToCSVParser {
 		this.mergeWalletIfPossible();  
 		AddressJSON aJ = null;
 		try{
-			JSONObject addrObj = this.readJsonFromUrl("https://api.blocktrail.com/v1/btc/address/" + address +"?api_key="+ Util.apiKey);
+			JSONObject addrObj = this.readJsonFromUrl("https://api.blocktrail.com/v1/btc/address/" + address +"?api_key="+ Util.getApiKey());
 			aJ = new AddressJSON(addrObj);
 			ToCSVParser.addrJSet.add(aJ);
 		}catch(Exception se){
