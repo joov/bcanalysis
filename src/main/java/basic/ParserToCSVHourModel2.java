@@ -21,7 +21,7 @@ public class ParserToCSVHourModel2 extends ParserToCSVModel2 implements BitCoinE
 
 	
 	public ParserToCSVHourModel2(int numBlock, boolean begin, String lastBlock, 
-			String lastTran, String currTran, String lastAddr, int folderCounter) throws FileNotFoundException {
+			String lastTran, String currTran, LastAddr lastAddr, int folderCounter) throws FileNotFoundException {
 		super(numBlock, begin, lastBlock, lastTran, currTran, lastAddr, folderCounter);
 	}
 	

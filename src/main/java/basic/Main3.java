@@ -12,15 +12,14 @@ import org.json.JSONException;
 public class Main3 {
 	
 	//to be change to the output of the String in the output after "Last Hash: " in the last parse
-	public static String lastTranHash = "d574cc8d4f962f534d2540da67a7dbc73b30ead3af34fac02434e53f312e6af9"; //
-	public static String lastBlockHash = "0000000000000000055166d31041a3068167eb3c9f9ab16ee04f9ddd77140c93"; //
-	public static String currTranHash = "92088fe6b9d9c9db84d26481b80104f8ca566649a656b7aa3e67432b346cbf1c";
-	public static String lastAddr = "18a53xQhYFoBu1jxVAFbqp1SgzPqPM8aEd";
-	public static int counter = 153;
+	public static String lastTranHash = "d545ba112d375aa31b5652fd5ba2657673cfc622cb4b53a0fbe06c54145656b5"; //
+	public static String lastBlockHash = "000000000000000000e731b8e81fccc3168402de0ed0d4066c85920f86ae1913"; //
+	public static String currTranHash = "94cdebb2c44db4969824c79468358f9ec555bb9a2c0d12d875d56d31452916b7";
+	public static LastAddr lastAddr = new LastAddr("1AV8Ym2s8Jk9wQa2zATCv4nxTHYd1ppWpe", "94cdebb2c44db4969824c79468358f9ec555bb9a2c0d12d875d56d31452916b7", true, 227);
+	public static int counter = 10093; //10016
 	public static void main(String[] args) throws JSONException, IOException{
 //		ParserToCSVHourModel2 p = new ParserToCSVHourModel2(30, true, null, 1);
 //		p.parse();
-		
 		while(true){
 			System.out.println(counter);
 			ParserToCSVHourModel2 p = new ParserToCSVHourModel2(30, false, Main3.lastBlockHash, 
