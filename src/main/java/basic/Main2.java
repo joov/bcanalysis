@@ -1,4 +1,4 @@
-package basic;
+package basicCopy;
 
 import java.io.FileInputStream;
 import java.io.IOException;
