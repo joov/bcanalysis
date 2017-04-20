@@ -12,15 +12,30 @@ import org.json.JSONException;
 public class Main3 {
 	
 	//to be change to the output of the String in the output after "Last Hash: " in the last parse
-	public static String lastTranHash = "d574cc8d4f962f534d2540da67a7dbc73b30ead3af34fac02434e53f312e6af9"; //
-	public static String lastBlockHash = "0000000000000000055166d31041a3068167eb3c9f9ab16ee04f9ddd77140c93"; //
-	public static String currTranHash = "92088fe6b9d9c9db84d26481b80104f8ca566649a656b7aa3e67432b346cbf1c";
-	public static String lastAddr = "18a53xQhYFoBu1jxVAFbqp1SgzPqPM8aEd";
-	public static int counter = 153;
+	public static String lastTranHash; //
+	public static String lastBlockHash; //
+	public static String currTranHash;
+	public static LastAddr lastAddr;
 	public static void main(String[] args) throws JSONException, IOException{
 //		ParserToCSVHourModel2 p = new ParserToCSVHourModel2(30, true, null, 1);
 //		p.parse();
+
+		// Set Logger
+		Logger LOG = Logger.getLogger(Main3.class) ;
 		
+		BCProperties.loadProperties() ;
+
+		Main3.lastBlockHash = BCProperties.getProperty("last.block", "00000000000000000045792345e2e6506db04f7d6511de933d5a5e5c3127199d") ;
+		Main3.lastTranHash = BCProperties.getProperty("last.trans", "0531bd4da288268a22ed41a8cf7eb1ae76c91955e4a7060e02770bb0b7c196c0") ;
+		Main3.currTranHash = BCProperties.getProperty("curr.trans", "0e5d7643b611cca88297a60d1c52567cfda919b7b4f45fce31de6e635ba53269") ;
+		String lastAddrID = BCProperties.getProperty("last.addr", "14GKDnmbBwBtH3bF7tuDWCJi4Ey3wgkbQL") ;
+		boolean isOutput = Boolean.parseBoolean(BCProperties.getProperty("isOutput", "true"));
+		int outputIndex = Integer.parseInt(BCProperties.getProperty("outputIndex", "166"));
+		
+		Main3.lastAddr = new LastAddr(lastAddrID, Main3.currTranHash, isOutput, outputIndex)
+		
+		
+		int counter = Integer.parseInt(BCProperties.getProperty("main.counter", "16")); //also sometimes need to be changed
 		while(true){
 			System.out.println(counter);
 			ParserToCSVHourModel2 p = new ParserToCSVHourModel2(30, false, Main3.lastBlockHash, 
