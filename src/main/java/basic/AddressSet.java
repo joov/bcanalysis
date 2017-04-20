@@ -22,7 +22,6 @@ public class AddressSet{
 	 }
 	 
 	 public boolean add(AddressT a, ToCSVParser p){
-		 p.setLastAddrBef(a.getAddr());
 		 return this.addrSet.add(a);
 	 }
 	 
@@ -40,13 +39,15 @@ public class AddressSet{
 		 LinkedList<AddressT> list = new LinkedList<AddressT>(this.addrSet);
 		 Iterator<AddressT> itr = list.descendingIterator();
 		 AddressT result = itr.next();
-		 while(result != null && result.getAddr() == null) {
+		 while(result.getPrimWAdd() == null) {
 			 result=itr.next();
 		 }
-		return result;
+		 System.out.println(result);
+		 return result;
 	 }
 	 
-	 public void addAddrAccJSON(String address, JSONObject item, AddressJSON addrObj, ToCSVParser p){
+	 public void addAddrAccJSON(String address, JSONObject item, AddressJSON addrObj, 
+			 ToCSVParser p, String tranHash, boolean isOutput, int index){
 		AddressT presentAddr = this.getCertainAddress(address); 
 		boolean containMultiSig = false;
 		String primWallet = null;
@@ -57,7 +58,8 @@ public class AddressSet{
 		this.addrSet.remove(new Address(address, null, null));
 		// no addr entry or no correct addr entry
 		if(!(item.has("addr") && item.getString("addr").equals(address))){
-			this.add(new AddressT(address, null, null, addrObj, primWallet, containMultiSig), p);
+			this.add(new AddressT(address, null, null, addrObj, primWallet, 
+					containMultiSig, tranHash, isOutput, index), p);
 			return;
 		}
 		if (item.has("addr_tag_link") || item.has("addr_tag")) {
@@ -66,18 +68,19 @@ public class AddressSet{
 				this.addrSet.remove(new Address(address, item.getString("addr_tag_link"), null));
 				this.addrSet.remove(new Address(address, null, item.getString("addr_tag")));
 				this.add(new AddressT(address, item.getString("addr_tag_link"), item.getString("addr_tag"), 
-						addrObj, primWallet, containMultiSig), p);
+						addrObj, primWallet, containMultiSig, tranHash, isOutput, index), p);
 			} else if (item.has("addr_tag_link")) {
 				System.out.println(address);
 				this.add(new AddressT(address, item.getString("addr_tag_link"), null, 
-						addrObj, primWallet, containMultiSig), p);
+						addrObj, primWallet, containMultiSig, tranHash, isOutput, index), p);
 			} else {
 				System.out.println(address);
 				this.add(new AddressT(address, null, item.getString("addr_tag"), 
-						addrObj, primWallet, containMultiSig), p);
+						addrObj, primWallet, containMultiSig, tranHash, isOutput, index), p);
 			}
 		}else{
-			this.add(new AddressT(address, null, null, addrObj, primWallet, containMultiSig), p);
+			this.add(new AddressT(address, null, null, addrObj, primWallet, 
+					containMultiSig, tranHash, isOutput, index), p);
 		}		 
 	 }
 	 
