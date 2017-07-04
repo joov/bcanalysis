@@ -109,6 +109,7 @@ public abstract class ParserToCSVModel2 extends ToCSVParser{
 						}
 					}
 					if(i == tas.length()){
+						justStarted2 = false;
 						i = 0;
 						ta = tas.getJSONObject(i);
 					}

@@ -12,12 +12,21 @@ import org.json.JSONException;
 public class Main3 {
 	
 	//to be change to the output of the String in the output after "Last Hash: " in the last parse
-	public static String lastTranHash = "d545ba112d375aa31b5652fd5ba2657673cfc622cb4b53a0fbe06c54145656b5"; //
-	public static String lastBlockHash = "000000000000000000e731b8e81fccc3168402de0ed0d4066c85920f86ae1913"; //
-	public static String currTranHash = "94cdebb2c44db4969824c79468358f9ec555bb9a2c0d12d875d56d31452916b7";
-	public static LastAddr lastAddr = new LastAddr("1AV8Ym2s8Jk9wQa2zATCv4nxTHYd1ppWpe", "94cdebb2c44db4969824c79468358f9ec555bb9a2c0d12d875d56d31452916b7", true, 227);
+	public static String lastTranHash; //
+	public static String lastBlockHash; //
+	public static String currTranHash;
+	public static LastAddr lastAddr;
 	public static int counter = 10093; //10016
 	public static void main(String[] args) throws JSONException, IOException{
+		
+		lastTranHash = BCProperties.getProperty("last.trans", "0531bd4da288268a22ed41a8cf7eb1ae76c91955e4a7060e02770bb0b7c196c0");
+		lastBlockHash = BCProperties.getProperty("last.block", "00000000000000000045792345e2e6506db04f7d6511de933d5a5e5c3127199d");;
+		currTranHash = BCProperties.getProperty("curr.trans", "0e5d7643b611cca88297a60d1c52567cfda919b7b4f45fce31de6e635ba53269");
+		lastAddr = new LastAddr(
+		 BCProperties.getProperty("last.addr", "14GKDnmbBwBtH3bF7tuDWCJi4Ey3wgkbQL"),
+		 BCProperties.getProperty("last.addr.tran", "0e5d7643b611cca88297a60d1c52567cfda919b7b4f45fce31de6e635ba53269"),
+		Boolean.parseBoolean(BCProperties.getProperty("isOutput", "true")),
+		Integer.parseInt(BCProperties.getProperty("outputIndex", "166")))
 //		ParserToCSVHourModel2 p = new ParserToCSVHourModel2(30, true, null, 1);
 //		p.parse();
 		while(true){
