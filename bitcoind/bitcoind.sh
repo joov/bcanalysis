@@ -1,1 +1,1 @@
-bitcoind -daemon -datadir=/bitcoin
+bitcoind -daemon -txindex -datadir=/bitcoin -rest
