@@ -16,8 +16,8 @@ import org.apache.commons.lang.time.DateUtils;
  */
 public class Util {
 	
-	public static final String apiKey= "b88ae2fc47fdd1b7fd132ad189734a0c783a4f5f";  //to be changed if it is different
-	public static final String path= "/csvs";
+	private static final String apiKey= BCProperties.getProperty("api.key", "b88ae2fc47fdd1b7fd132ad189734a0c783a4f5f");  //to be changed if it is different
+	private static final String path= BCProperties.getProperty("data.dir",System.getProperty("user.home")+"/csvs");
 	
 	 // time is always in the format of "2014-03-11T08:27:57+0000"
 	public static Date getTime(String time) throws ParseException{
@@ -40,5 +40,12 @@ public class Util {
 	    if ((o1==null)||(o2==null)) return false;
 	    return o1.equals(o2);
 	  }
+	
+	public static String getPath() {
+		return path ;
+	}
+	public static String getApiKey() {
+		return apiKey ;
+	}
 
 }

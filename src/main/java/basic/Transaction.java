@@ -24,14 +24,17 @@ public class Transaction {
 	private String hash;
 	private String outputType; 
 	private String estChanAddr;
+	private int outputIndex;
 	
 	public Transaction(String hash, ArrayList<Wallet> availWallet, Wallet sender, AddressT receiver, 
-			long satoshi, double dollar, String time, String outputType, String estChanAddr, ParserToCSVModel2 parser){
+			long satoshi, double dollar, String time, String outputType, String estChanAddr, ParserToCSVModel2 parser,
+			int outputIndex){
 		this.hash = hash;
 		this.satoshi = satoshi;
 		this.dollar = dollar;
 		this.outputType = outputType;
 		this.estChanAddr = estChanAddr;
+		this.outputIndex = outputIndex;
 	    try {
 			this.time = time.split("\\+")[0];
 			Date temp =  Util.getTime(time);
@@ -66,12 +69,14 @@ public class Transaction {
 	
 	//used when the output is multisig
 	public Transaction(String hash, ArrayList<Wallet> availWallet, Wallet sender, ArrayList<AddressT> receivers, 
-			long satoshi, double dollar, String time, String outputType, String estChanAddr, ParserToCSVModel2 parser){
+			long satoshi, double dollar, String time, String outputType, String estChanAddr, ParserToCSVModel2 parser,
+			int outputIndex){
 		this.hash = hash;
 		this.satoshi = satoshi;
 		this.dollar = dollar;
 		this.outputType = outputType;
 		this.estChanAddr = estChanAddr;
+		this.outputIndex = outputIndex;
 	    try {
 			this.time = time.split("\\+")[0];
 			Date temp =  Util.getTime(time);
@@ -171,11 +176,11 @@ public class Transaction {
 		return this.estChanAddr;
 	}
 	
-	//sendWallet,receWallet,tranHashString,time,value_bitcoin,value_dollar,type,estChanAddr
+	//sendWallet,receWallet,tranHashString,time,value_bitcoin,value_dollar,type,estChanAddr,outputIndex
 	public String toString(){
 		return this.sendWallet.getPrimAdd() + ',' + this.receiWallet.getPrimAdd()
 		+ ',' + this.hash + ',' + this.time + ',' + this.satoshi + ',' + this.dollar
-		+ ',' + this.outputType + ',' + this.estChanAddr;
+		+ ',' + this.outputType + ',' + this.estChanAddr  + ',' + this.outputIndex;
 	}
 
 }

@@ -28,7 +28,7 @@ import org.json.JSONObject;
 public abstract class ToCSVParser {
 	protected int folderCounter;
 	protected String lastBlockHashFromBefore;
-	public String lastAddrFromBefore;
+	public LastAddr lastAddrFromBefore;
 
 	
 	protected ArrayList<String> blocklists = new ArrayList<String>();
@@ -43,7 +43,7 @@ public abstract class ToCSVParser {
 	 * Constructor
 	 * @param datFileNames the array of dat file name in form of .dat
 	 */
-	public ToCSVParser(int numBlock, boolean begin, String lastHashFromBefore, String addrFromBefore, int folderCounter){
+	public ToCSVParser(int numBlock, boolean begin, String lastHashFromBefore, LastAddr addrFromBefore, int folderCounter){
 		this.folderCounter = folderCounter;
 		this.lastBlockHashFromBefore = lastHashFromBefore;
 		this.lastAddrFromBefore = addrFromBefore;
@@ -166,7 +166,8 @@ public abstract class ToCSVParser {
 	 * @throws JSONException
 	 * @throws IOException 
 	 */
-	protected void addAddrWithTagL(JSONArray xputs, String address, boolean isInput) throws JSONException, IOException{
+protected void addAddrWithTagL(JSONArray xputs, String address, boolean isInput, 
+			String tranHash, boolean isOutput, int index) throws JSONException, IOException{
 		JSONObject item = null;
 		if(isInput){
 			for(int i = 0; i < xputs.length(); i ++){
@@ -192,7 +193,7 @@ public abstract class ToCSVParser {
 		}
 		
 		AddressJSON addrObj = this.getAddrJSON(address);
-		this.addrSet.addAddrAccJSON(address, item, addrObj, this);
+		this.addrSet.addAddrAccJSON(address, item, addrObj, this, tranHash, isOutput, index);
 	}
 	
 	protected String getLastHash(){
@@ -216,7 +217,7 @@ public abstract class ToCSVParser {
 		this.mergeWalletIfPossible();  
 		AddressJSON aJ = null;
 		try{
-			JSONObject addrObj = this.readJsonFromUrl("https://api.blocktrail.com/v1/btc/address/" + address +"?api_key="+ Util.apiKey);
+			JSONObject addrObj = this.readJsonFromUrl("https://api.blocktrail.com/v1/btc/address/" + address +"?api_key="+ Util.getApiKey());
 			aJ = new AddressJSON(addrObj);
 			ToCSVParser.addrJSet.add(aJ);
 		}catch(Exception se){
@@ -259,7 +260,7 @@ public abstract class ToCSVParser {
 	protected void removeFromWallList(Wallet toRe){
 		this.wallSet.remove(toRe);
 	}
-	public void setLastAddrBef(String addr){
-		this.lastAddrFromBefore = addr;
+	public void setLastAddrBef(String addr, String tran, boolean isOutput, int index){
+		this.lastAddrFromBefore = new LastAddr(addr, tran, isOutput, index);
 	}
 }
